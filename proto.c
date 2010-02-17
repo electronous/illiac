@@ -25,6 +25,13 @@ typedef struct {
 typedef available_space_format_t asf_t;
 
 typedef struct {
+	byte_t zero;
+	byte_t bounds;
+	hw_t start_page;
+} base_pointer_t;
+	
+
+typedef struct {
 	number_format_t pr_0;
 	number_format_t pr_1;
 	number_format_t pr_2;
@@ -39,6 +46,10 @@ typedef struct {
 	number_format_t pr_11;
 	number_format_t pr_12;
 	number_format_t pr_13;
+	base_pointer_t br_0;
+	base_pointer_t br_1;
+	base_pointer_t br_2;
+	base_pointer_t br_3;
 	asf_t pr_14;
 } cpu_t;
 
