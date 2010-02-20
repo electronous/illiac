@@ -58,8 +58,8 @@ raw_address_t get_address_common(number_format_t *p, cpu_t *cpu)
 {
 	uint8_t br_num;
 	br_num = (p->pointer_link.low.flag << 2);
-	br_num += (p->pointer_value.high.flag << 1);
-	br_num += (p->pointer_value.low.flag);
+	br_num |= (p->pointer_value.high.flag << 1);
+	br_num |= (p->pointer_value.low.flag);
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
 						   (cpu->br[br_num].start_page.low.data  << 8));
@@ -70,8 +70,8 @@ raw_address_t get_address_from_pointer(number_format_t *p, cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
+	ret |= (p->pointer_value.low.data);
 	ret += (p->pointer_value.high.data << 8);
-	ret += (p->pointer_value.low.data);
 
 	return ret;
 }
@@ -80,8 +80,8 @@ raw_address_t get_address_from_link(number_format_t *p, cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
+	ret |= (p->pointer_link.low.data);
 	ret += (p->pointer_link.high.data << 8);
-	ret += (p->pointer_link.low.data);
 
 	return ret;
 }
