@@ -86,7 +86,8 @@ raw_address_t get_address_from_link(number_format_t *p, cpu_t *cpu)
 	return ret;
 }
 
-number_format_t get_pointer_register_from_memory(raw_address_t addr) {
+number_format_t get_pointer_register_from_memory(raw_address_t addr)
+{
 	number_format_t ret;
 	ret.pointer_link.high = memory[addr];
 	ret.pointer_link.low = memory[addr + 1];
@@ -113,8 +114,8 @@ int main(void)
 		{
 			printf("Segfault.");
 		}
-		cpu.pr[0] = get_pointer_register_from_memory(next);
 		exec(mem(current_instruction.pointer_value));
+		cpu.pr[0] = get_pointer_register_from_memory(next);
 	}
 	return 0;
 }
