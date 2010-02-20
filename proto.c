@@ -13,20 +13,25 @@ typedef struct
 {
 	byte_t low;
 	byte_t high;
-} half_word_t;
-typedef half_word_t hw_t;
+} halfword_t;
 
 typedef struct
 {
-	half_word_t pointer_link;
-	half_word_t pointer_value;
+	halfword_t low;
+	halfword_t high;
+} word_t;
+
+typedef struct
+{
+	halfword_t pointer_link;
+	halfword_t pointer_value;
 } number_format_t;
 typedef number_format_t nf_t;
 
 typedef struct
 {
-	hw_t consecutive_storage_link;
-	hw_t free_list_link;
+	halfword_t consecutive_storage_link;
+	halfword_t free_list_link;
 } available_space_format_t;
 typedef available_space_format_t asf_t;
 
@@ -34,7 +39,7 @@ typedef struct
 {
 	byte_t zero;
 	byte_t bounds;
-	hw_t start_page;
+	halfword_t start_page;
 } base_pointer_t;
 
 typedef int raw_address_t;
@@ -97,6 +102,222 @@ number_format_t get_pointer_register_from_memory(raw_address_t addr)
 	return ret;
 }
 
+byte_t get_byte_from_memory(raw_address_t addr)
+{
+	return memory[addr];
+}
+
+halfword_t get_halfword_from_memory(raw_address_t addr)
+{
+	halfword_t halfword = {
+		.low = memory[addr + 1],
+		.high = memory[addr]
+	};
+	return halfword;
+}
+
+word_t get_word_from_memory(raw_address_t addr)
+{
+	word_t word = {
+		.low  = get_halfword_from_memory(addr + 2),
+		.high = get_halfword_from_memory(addr),
+	};
+	return word;
+}
+
+void put_byte_into_memory(byte_t arg, raw_address_t addr)
+{
+	memory[addr] = arg;
+}
+
+void put_halfword_into_memory(halfword_t arg, raw_address_t addr)
+{
+	put_byte_into_memory(arg.high, addr);
+	put_byte_into_memory(arg.low, addr + 1);
+}
+
+void put_word_into_memory(word_t arg, raw_address_t addr)
+{
+	put_halfword_into_memory(arg.high, addr);
+	put_halfword_into_memory(arg.low, addr + 2);
+}
+
+uint8_t byte_to_data(byte_t byte)
+{
+	return byte.data;
+}
+
+uint16_t halfword_to_data(halfword_t halfword)
+{
+	return (halfword.high.data << 8) | (halfword.low.data);
+}
+
+uint32_t word_to_data(word_t word)
+{
+	return (halfword_to_data(word.high) << 16) | halfword_to_data(word.low);
+}
+
+byte_t data_to_byte(uint8_t data)
+{
+	byte_t byte = { .data = data, .flag = 0 };
+	return byte;
+}
+
+halfword_t data_to_halfword(uint16_t data)
+{
+	halfword_t halfword = {
+		.high = data_to_byte((data >> 8) & 0xFF),
+		.low  = data_to_byte(data        & 0xFF)
+	};
+	return halfword;
+}
+
+word_t data_to_word(uint32_t data)
+{
+	word_t word = {
+		.high = data_to_halfword((data >> 16) & 0xFFFF),
+		.low  = data_to_halfword(data         & 0xFFFF)
+	};
+	return word;
+}
+
+void copy_byte_flags(byte_t *from, byte_t *to)
+{
+	to->flag = from->flag;
+}
+
+void copy_halfword_flags(halfword_t *from, halfword_t *to)
+{
+	copy_byte_flags(&(from->low), &(to->low));
+	copy_byte_flags(&(from->high), &(to->high));
+}
+
+void copy_word_flags(word_t *from, word_t *to)
+{
+	copy_halfword_flags(&(from->low), &(to->low));
+	copy_halfword_flags(&(from->high), &(to->high));
+}
+
+byte_t pop_operand_byte(cpu_t *cpu)
+{
+	uint16_t data = halfword_to_data(cpu->pr[13].pointer_value);
+	data -= 1;
+
+	halfword_t halfword = data_to_halfword(data);
+	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+
+	cpu->pr[13].pointer_value = halfword;
+
+	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	return get_byte_from_memory(operand_pointer);
+}
+
+halfword_t pop_operand_halfword(cpu_t *cpu)
+{
+	uint16_t data = halfword_to_data(cpu->pr[13].pointer_value);
+	data -= 2;
+
+	halfword_t halfword = data_to_halfword(data);
+	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+
+	cpu->pr[13].pointer_value = halfword;
+
+	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	return get_halfword_from_memory(operand_pointer);
+}
+
+word_t pop_operand_word(cpu_t *cpu)
+{
+	uint16_t data = halfword_to_data(cpu->pr[13].pointer_value);
+	data -= 4;
+
+	halfword_t halfword = data_to_halfword(data);
+	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+
+	cpu->pr[13].pointer_value = halfword;
+
+	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	return get_word_from_memory(operand_pointer);
+}
+
+void push_operand_byte(byte_t arg, cpu_t *cpu)
+{
+	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	uint16_t data = halfword_to_data(cpu->pr[13].pointer_value);
+	data += 1;
+
+	halfword_t halfword = data_to_halfword(data);
+	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+
+	cpu->pr[13].pointer_value = halfword;
+
+	put_byte_into_memory(arg, operand_pointer);
+}
+
+void push_operand_halfword(halfword_t arg, cpu_t *cpu)
+{
+	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	uint16_t data = halfword_to_data(cpu->pr[13].pointer_value);
+	data += 2;
+
+	halfword_t halfword = data_to_halfword(data);
+	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+
+	cpu->pr[13].pointer_value = halfword;
+	put_halfword_into_memory(arg, operand_pointer);
+}
+
+void push_operand_word(word_t arg, cpu_t *cpu)
+{
+	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	uint16_t data = halfword_to_data(cpu->pr[13].pointer_value);
+	data += 4;
+
+	halfword_t halfword = data_to_halfword(data);
+	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+
+	cpu->pr[13].pointer_value = halfword;
+	put_word_into_memory(arg, operand_pointer);
+}
+
+void abs_long(cpu_t *cpu)
+{
+	word_t operand = pop_operand_word(cpu);
+	uint32_t data = word_to_data(operand);
+	bool overflow = false;
+	if ((1 << 31) & data)
+	{
+		data = -data;
+		if ((1 << 31) & data)
+		{
+			overflow = true;
+		}
+	}
+
+	word_t word = data_to_word(data);
+	copy_word_flags(&operand, &word);
+
+	if (overflow)
+	{
+		word.high.low.flag = true;
+	}
+
+	push_operand_word(word, cpu);
+}
+
+void execute(byte_t opcode, cpu_t *cpu)
+{
+	if (opcode.flag)
+	{
+		switch (opcode.data)
+		{
+			case 0b10010101:
+				abs_long(cpu);
+				break;
+		}
+	}
+}
+
 int main(void)
 {
 	cpu_t cpu;
@@ -108,13 +329,14 @@ int main(void)
 	}
 	for (;;)
 	{
-		raw_address_t next;
 		nf_t current_instruction = cpu.pr[0];
-		if ((next = get_address_from_link(&(cpu.pr[0]), &cpu) == -1))
-		{
-			printf("Segfault.");
-		}
-		exec(mem(current_instruction.pointer_value));
+
+		raw_address_t instruction = get_address_from_pointer(&current_instruction, &cpu);
+
+		byte_t opcode = get_byte_from_memory(instruction);
+		execute(opcode, &cpu);
+
+		raw_address_t next = get_address_from_link(&current_instruction, &cpu);
 		cpu.pr[0] = get_pointer_register_from_memory(next);
 	}
 	return 0;
