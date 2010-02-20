@@ -1,7 +1,7 @@
+#include <stdlib.h>
+#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
-
-byte_t *memory;
 
 typedef struct
 {
@@ -46,6 +46,8 @@ typedef struct
 	asf_t pr_14;
 } cpu_t;
 
+byte_t *memory;
+
 static void
 exec(nf_t instruction_word)
 {
@@ -59,7 +61,8 @@ raw_address_t get_address_common(number_format_t *p, cpu_t *cpu)
 	br_num += (p->pointer_value.high.flag << 1);
 	br_num += (p->pointer_value.low.flag);
 
-	return (raw_address_t)(cpu->br[br_num].start_page.data << 8);
+	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
+						   (cpu->br[br_num].start_page.low.data  << 8));
 
 }
 
