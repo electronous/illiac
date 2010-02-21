@@ -10,7 +10,7 @@ raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 {
 	uint8_t third_flag  = get_flag_from_byte(p->pointer_link.low);
 	uint8_t second_flag = get_flag_from_byte(p->pointer_value.high);
-	uint8_t first_flag = get_flag_from_byte(p->pointer_value.low);
+	uint8_t first_flag  = get_flag_from_byte(p->pointer_value.low);
 
 	uint8_t br_num = (uint8_t)(first_flag | second_flag << 0 | third_flag << 2);
 
@@ -42,7 +42,7 @@ raw_address_t get_address_from_link(const number_format_t *p, const cpu_t *cpu)
 number_format_t get_pointer_register_from_memory(raw_address_t addr)
 {
 	number_format_t ret = {
-		.pointer_link = get_halfword_from_memory(addr),
+		.pointer_link  = get_halfword_from_memory(addr),
 		.pointer_value = get_halfword_from_memory(addr + 2)
 	};
 
@@ -80,13 +80,13 @@ void put_byte_into_memory(byte_t arg, raw_address_t addr)
 void put_halfword_into_memory(halfword_t arg, raw_address_t addr)
 {
 	put_byte_into_memory(arg.high, addr);
-	put_byte_into_memory(arg.low, addr + 1);
+	put_byte_into_memory(arg.low,  addr + 1);
 }
 
 void put_word_into_memory(word_t arg, raw_address_t addr)
 {
 	put_halfword_into_memory(arg.high, addr);
-	put_halfword_into_memory(arg.low, addr + 2);
+	put_halfword_into_memory(arg.low,  addr + 2);
 }
 
 uint8_t get_data_from_byte(byte_t byte)
@@ -147,14 +147,14 @@ void copy_byte_flags(const byte_t *from, byte_t *to)
 
 void copy_halfword_flags(const halfword_t *from, halfword_t *to)
 {
-	copy_byte_flags(&(from->low), &(to->low));
 	copy_byte_flags(&(from->high), &(to->high));
+	copy_byte_flags(&(from->low),  &(to->low));
 }
 
 void copy_word_flags(const word_t *from, word_t *to)
 {
-	copy_halfword_flags(&(from->low), &(to->low));
 	copy_halfword_flags(&(from->high), &(to->high));
+	copy_halfword_flags(&(from->low),  &(to->low));
 }
 
 byte_t pop_operand_byte(cpu_t *cpu)
@@ -282,7 +282,7 @@ void execute(byte_t opcode, cpu_t *cpu)
 int main(void)
 {
 	cpu_t cpu;
-	memory = malloc(sizeof(byte_t) * (1 << 24));
+	memory = (byte_t *)malloc(sizeof(byte_t) * (1 << 24));
 	if (!memory)
 	{
 		printf("oh god help!!");
