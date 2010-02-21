@@ -3,14 +3,13 @@
 
 #include "proto.h"
 
-static
 byte_t *memory;
 
 raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 {
-	uint8_t third_flag  = get_flag_from_byte(p->pointer_link.low);
-	uint8_t second_flag = get_flag_from_byte(p->pointer_value.high);
-	uint8_t first_flag  = get_flag_from_byte(p->pointer_value.low);
+	bool third_flag  = get_flag_from_byte(p->pointer_link.low);
+	bool second_flag = get_flag_from_byte(p->pointer_value.high);
+	bool first_flag  = get_flag_from_byte(p->pointer_value.low);
 
 	uint8_t br_num = (uint8_t)(first_flag | second_flag << 1 | third_flag << 2);
 
@@ -23,8 +22,8 @@ raw_address_t get_address_from_pointer(const number_format_t *p, const cpu_t *cp
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
-	ret |= get_data_from_byte(p->pointer_value.low);
-	ret += get_data_from_byte(p->pointer_value.high) << 8;
+	ret |= (raw_address_t)get_data_from_byte(p->pointer_value.low);
+	ret += (raw_address_t)(get_data_from_byte(p->pointer_value.high) << 8);
 
 	return ret;
 }
@@ -33,8 +32,8 @@ raw_address_t get_address_from_link(const number_format_t *p, const cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
-	ret |= get_data_from_byte(p->pointer_link.low);
-	ret += get_data_from_byte(p->pointer_link.high) << 8;
+	ret |= (raw_address_t)get_data_from_byte(p->pointer_link.low);
+	ret += (raw_address_t)(get_data_from_byte(p->pointer_link.high) << 8);
 
 	return ret;
 }
@@ -159,53 +158,69 @@ void copy_word_flags(const word_t *from, word_t *to)
 
 byte_t pop_operand_byte(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data -= 1;
+	halfword_t halfword;
+	raw_address_t operand_pointer;
+	uint16_t data;
 
-	halfword_t halfword = put_data_into_halfword(data);
+	data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data = (uint16_t)(data - 1);
+
+	halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
 
-	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
 	return get_byte_from_memory(operand_pointer);
 }
 
 halfword_t pop_operand_halfword(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data -= 2;
+	halfword_t halfword;
+	raw_address_t operand_pointer;
+	uint16_t data;
 
-	halfword_t halfword = put_data_into_halfword(data);
+	data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data = (uint16_t)(data - 2);
+
+	halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
 
-	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
 	return get_halfword_from_memory(operand_pointer);
 }
 
 word_t pop_operand_word(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data -= 4;
+	halfword_t halfword;
+	raw_address_t operand_pointer;
+	uint16_t data;
 
-	halfword_t halfword = put_data_into_halfword(data);
+	data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data = (uint16_t)(data - 4);
+
+	halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
 
-	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
 	return get_word_from_memory(operand_pointer);
 }
 
 void push_operand_byte(byte_t arg, cpu_t *cpu)
 {
-	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data += 1;
+	halfword_t halfword;
+	raw_address_t operand_pointer;
+	uint16_t data;
 
-	halfword_t halfword = put_data_into_halfword(data);
+	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data = (uint16_t)(data + 1);
+
+	halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -215,55 +230,63 @@ void push_operand_byte(byte_t arg, cpu_t *cpu)
 
 void push_operand_halfword(halfword_t arg, cpu_t *cpu)
 {
-	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data += 2;
+	halfword_t halfword;
+	raw_address_t operand_pointer;
+	uint16_t data;
 
-	halfword_t halfword = put_data_into_halfword(data);
+	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data = (uint16_t)(data + 2);
+
+	halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
+
 	put_halfword_into_memory(arg, operand_pointer);
 }
 
 void push_operand_word(word_t arg, cpu_t *cpu)
 {
-	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data += 4;
+	halfword_t halfword;
+	raw_address_t operand_pointer;
+	uint16_t data;
 
-	halfword_t halfword = put_data_into_halfword(data);
+	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data = (uint16_t)(data + 4);
+
+	halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
+
 	put_word_into_memory(arg, operand_pointer);
 }
 
 void abs_long(cpu_t *cpu)
 {
-	word_t operand = pop_operand_word(cpu);
-	uint32_t data = get_data_from_word(operand);
-	bool overflow = false;
+	word_t operand, new_stack_value;
+	uint32_t abs_data;
+	bool has_overflowed;
 
-	if (data >> 31)
+	operand = pop_operand_word(cpu);
+	abs_data = get_data_from_word(operand);
+	if ((abs_data >> 31) == 1)
 	{
-		data = ~data + 1;
+		abs_data = ~abs_data + 1;
 	}
 
-	if (data >> 31)
+	new_stack_value = put_data_into_word(abs_data);
+	copy_word_flags(&operand, &new_stack_value);
+
+	has_overflowed = (abs_data >> 31) == 1;
+	if (has_overflowed)
 	{
-		overflow = true;
+		new_stack_value.high.low.flag = true;
 	}
 
-	word_t word = put_data_into_word(data);
-	copy_word_flags(&operand, &word);
-
-	if (overflow)
-	{
-		word.high.low.flag = true;
-	}
-
-	push_operand_word(word, cpu);
+	push_operand_word(new_stack_value, cpu);
 }
 
 void execute(byte_t opcode, cpu_t *cpu)
@@ -290,6 +313,7 @@ int main(void)
 	}
 	for (;;)
 	{
+		raw_address_t next;
 		nf_t current_instruction = cpu.pr[0];
 
 		raw_address_t instruction = get_address_from_pointer(&current_instruction, &cpu);
@@ -297,7 +321,7 @@ int main(void)
 		byte_t opcode = get_byte_from_memory(instruction);
 		execute(opcode, &cpu);
 
-		raw_address_t next = get_address_from_link(&current_instruction, &cpu);
+		next = get_address_from_link(&current_instruction, &cpu);
 		cpu.pr[0] = get_pointer_register_from_memory(next);
 	}
 }
