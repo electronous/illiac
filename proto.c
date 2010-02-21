@@ -159,7 +159,8 @@ void copy_word_flags(const word_t *from, word_t *to)
 
 byte_t pop_operand_byte(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) - 1;
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data -= 1;
 
 	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
@@ -172,7 +173,8 @@ byte_t pop_operand_byte(cpu_t *cpu)
 
 halfword_t pop_operand_halfword(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) - 2;
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data -= 2;
 
 	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
@@ -185,7 +187,8 @@ halfword_t pop_operand_halfword(cpu_t *cpu)
 
 word_t pop_operand_word(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) - 4;
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data -= 4;
 
 	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
@@ -199,7 +202,8 @@ word_t pop_operand_word(cpu_t *cpu)
 void push_operand_byte(byte_t arg, cpu_t *cpu)
 {
 	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) + 1;
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data += 1;
 
 	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
@@ -212,7 +216,8 @@ void push_operand_byte(byte_t arg, cpu_t *cpu)
 void push_operand_halfword(halfword_t arg, cpu_t *cpu)
 {
 	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) + 2;
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data += 2;
 
 	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
@@ -224,7 +229,8 @@ void push_operand_halfword(halfword_t arg, cpu_t *cpu)
 void push_operand_word(word_t arg, cpu_t *cpu)
 {
 	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) + 4;
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	data += 4;
 
 	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
