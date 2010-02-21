@@ -246,7 +246,7 @@ void abs_long(cpu_t *cpu)
 	bool overflow = false;
 
 	uint32_t sign = data >> 31;
-	data = (sign ^ data) - data;
+	data = (sign ^ data) - sign;
 
 	if (data >> 31)
 	{
