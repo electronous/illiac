@@ -6,19 +6,20 @@
 static
 byte_t *memory;
 
-raw_address_t get_address_common(number_format_t *p, cpu_t *cpu)
+raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 {
-	uint8_t br_num;
-	br_num = get_flag_from_byte(p->pointer_link.low) << 2;
-	br_num |= (uint8_t)(get_flag_from_byte(p->pointer_value.high) << 1);
-	br_num |= get_flag_from_byte(p->pointer_value.low);
+	uint8_t third_flag  = get_flag_from_byte(p->pointer_link.low);
+	uint8_t second_flag = get_flag_from_byte(p->pointer_value.high);
+	uint8_t first_flag = get_flag_from_byte(p->pointer_value.low);
+
+	uint8_t br_num = (uint8_t)(first_flag | second_flag << 0 | third_flag << 2);
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
 						   (cpu->br[br_num].start_page.low.data  << 8));
 
 }
 
-raw_address_t get_address_from_pointer(number_format_t *p, cpu_t *cpu)
+raw_address_t get_address_from_pointer(const number_format_t *p, const cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
@@ -28,7 +29,7 @@ raw_address_t get_address_from_pointer(number_format_t *p, cpu_t *cpu)
 	return ret;
 }
 
-raw_address_t get_address_from_link(number_format_t *p, cpu_t *cpu)
+raw_address_t get_address_from_link(const number_format_t *p, const cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
@@ -139,18 +140,18 @@ word_t put_data_into_word(uint32_t data)
 	return word;
 }
 
-void copy_byte_flags(byte_t *from, byte_t *to)
+void copy_byte_flags(const byte_t *from, byte_t *to)
 {
 	to->flag = get_flag_from_byte(*from);
 }
 
-void copy_halfword_flags(halfword_t *from, halfword_t *to)
+void copy_halfword_flags(const halfword_t *from, halfword_t *to)
 {
 	copy_byte_flags(&(from->low), &(to->low));
 	copy_byte_flags(&(from->high), &(to->high));
 }
 
-void copy_word_flags(word_t *from, word_t *to)
+void copy_word_flags(const word_t *from, word_t *to)
 {
 	copy_halfword_flags(&(from->low), &(to->low));
 	copy_halfword_flags(&(from->high), &(to->high));
@@ -158,9 +159,9 @@ void copy_word_flags(word_t *from, word_t *to)
 
 byte_t pop_operand_byte(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) - 1;
 
-	halfword_t halfword = put_data_into_halfword(data - 1);
+	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -171,9 +172,9 @@ byte_t pop_operand_byte(cpu_t *cpu)
 
 halfword_t pop_operand_halfword(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) - 2;
 
-	halfword_t halfword = put_data_into_halfword(data - 2);
+	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -184,9 +185,9 @@ halfword_t pop_operand_halfword(cpu_t *cpu)
 
 word_t pop_operand_word(cpu_t *cpu)
 {
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) - 4;
 
-	halfword_t halfword = put_data_into_halfword(data - 4);
+	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -198,9 +199,9 @@ word_t pop_operand_word(cpu_t *cpu)
 void push_operand_byte(byte_t arg, cpu_t *cpu)
 {
 	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) + 1;
 
-	halfword_t halfword = put_data_into_halfword(data + 1);
+	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -211,9 +212,9 @@ void push_operand_byte(byte_t arg, cpu_t *cpu)
 void push_operand_halfword(halfword_t arg, cpu_t *cpu)
 {
 	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) + 2;
 
-	halfword_t halfword = put_data_into_halfword(data + 2);
+	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -223,9 +224,9 @@ void push_operand_halfword(halfword_t arg, cpu_t *cpu)
 void push_operand_word(word_t arg, cpu_t *cpu)
 {
 	raw_address_t operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value);
+	uint16_t data = get_data_from_halfword(cpu->pr[13].pointer_value) + 4;
 
-	halfword_t halfword = put_data_into_halfword(data + 4);
+	halfword_t halfword = put_data_into_halfword(data);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
