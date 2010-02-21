@@ -245,8 +245,10 @@ void abs_long(cpu_t *cpu)
 	uint32_t data = get_data_from_word(operand);
 	bool overflow = false;
 
-	uint32_t sign = data >> 31;
-	data = (sign ^ data) - sign;
+	if (data >> 31)
+	{
+		data = ~data + 1;
+	}
 
 	if (data >> 31)
 	{
