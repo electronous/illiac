@@ -42,7 +42,7 @@ typedef struct
 	halfword_t start_page;
 } base_pointer_t;
 
-typedef int raw_address_t;
+typedef uint32_t raw_address_t;
 
 typedef struct
 {
