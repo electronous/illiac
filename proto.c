@@ -3,7 +3,7 @@
 
 #include "proto.h"
 
-byte_t *memory;
+byte_t *core_memory;
 
 raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 {
@@ -50,7 +50,7 @@ number_format_t get_pointer_register_from_memory(raw_address_t addr)
 
 byte_t get_byte_from_memory(raw_address_t addr)
 {
-	return memory[addr];
+	return core_memory[addr];
 }
 
 halfword_t get_halfword_from_memory(raw_address_t addr)
@@ -73,7 +73,7 @@ word_t get_word_from_memory(raw_address_t addr)
 
 void put_byte_into_memory(byte_t arg, raw_address_t addr)
 {
-	memory[addr] = arg;
+	core_memory[addr] = arg;
 }
 
 void put_halfword_into_memory(halfword_t arg, raw_address_t addr)
@@ -305,8 +305,8 @@ void execute(byte_t opcode, cpu_t *cpu)
 int main(void)
 {
 	cpu_t cpu;
-	memory = (byte_t *)malloc(sizeof(byte_t) * (1 << 24));
-	if (!memory)
+	core_memory = (byte_t *)malloc(sizeof(byte_t) * (1 << 24));
+	if (!core_memory)
 	{
 		printf("oh god help!!");
 		exit(-1);
