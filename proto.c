@@ -22,7 +22,7 @@ raw_address_t get_address_from_pointer(const number_format_t *p, const cpu_t *cp
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
-	ret |= (raw_address_t)get_data_from_byte(p->pointer_value.low);
+	ret |= (raw_address_t) get_data_from_byte(p->pointer_value.low);
 	ret += (raw_address_t)(get_data_from_byte(p->pointer_value.high) << 8);
 
 	return ret;
@@ -32,7 +32,7 @@ raw_address_t get_address_from_link(const number_format_t *p, const cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
-	ret |= (raw_address_t)get_data_from_byte(p->pointer_link.low);
+	ret |= (raw_address_t) get_data_from_byte(p->pointer_link.low);
 	ret += (raw_address_t)(get_data_from_byte(p->pointer_link.high) << 8);
 
 	return ret;

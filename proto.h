@@ -10,19 +10,19 @@
 typedef struct
 {
 	uint8_t data;
-	bool flag;
+	bool    flag;
 } byte_t;
 
 typedef struct
 {
-	byte_t low;
 	byte_t high;
+	byte_t low;
 } halfword_t;
 
 typedef struct
 {
-	halfword_t low;
 	halfword_t high;
+	halfword_t low;
 } word_t;
 
 typedef struct
