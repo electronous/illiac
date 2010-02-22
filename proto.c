@@ -305,8 +305,8 @@ void execute(byte_t opcode, cpu_t *cpu)
 int main(void)
 {
 	cpu_t cpu;
-	core_memory = (byte_t *)malloc(sizeof(byte_t) * (1 << 24));
-	if (!core_memory)
+	core_memory = (byte_t *)malloc(sizeof(byte_t [1 << 24]));
+	if (core_memory == NULL)
 	{
 		printf("oh god help!!");
 		exit(-1);
@@ -324,4 +324,5 @@ int main(void)
 		next = get_address_from_link(&current_instruction, &cpu);
 		cpu.pr[0] = get_pointer_register_from_memory(next);
 	}
+	free(core_memory);
 }
