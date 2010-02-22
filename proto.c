@@ -295,7 +295,7 @@ void execute(byte_t opcode, cpu_t *cpu)
 	{
 		switch (opcode.data)
 		{
-			case 0b10010101:
+			case b(10010101):
 				abs_long(cpu);
 				break;
 		}
