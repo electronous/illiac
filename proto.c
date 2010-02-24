@@ -272,7 +272,7 @@ void abs_long(cpu_t *cpu)
 
 	operand = pop_operand_word(cpu);
 	abs_data = get_data_from_word(operand);
-	if ((abs_data >> 31) == 1)
+	if (abs_data >> 31)
 	{
 		abs_data = ~abs_data + 1;
 	}
@@ -280,7 +280,7 @@ void abs_long(cpu_t *cpu)
 	new_stack_value = put_data_into_word(abs_data);
 	copy_word_flags(&operand, &new_stack_value);
 
-	has_overflowed = (abs_data >> 31) == 1;
+	has_overflowed = abs_data >> 31;
 	if (has_overflowed)
 	{
 		new_stack_value.high.low.flag = true;
