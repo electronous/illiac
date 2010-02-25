@@ -325,4 +325,5 @@ int main(void)
 		cpu.pr[0] = get_pointer_register_from_memory(next);
 	}
 	free(core_memory);
+	return 0;
 }
