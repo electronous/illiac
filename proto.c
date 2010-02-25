@@ -11,7 +11,7 @@ raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 	bool second_flag = get_flag_from_byte(p->pointer_value.high);
 	bool first_flag  = get_flag_from_byte(p->pointer_value.low);
 
-	uint8_t br_num = (uint8_t)(first_flag | second_flag << 1 | third_flag << 2);
+	uint8_t br_num = (uint8_t)(first_flag << 0 | second_flag << 1 | third_flag << 2);
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
 						   (cpu->br[br_num].start_page.low.data  << 8));
