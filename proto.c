@@ -7,11 +7,11 @@ byte_t *core_memory;
 
 raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 {
-	bool third_flag  = get_flag_from_byte(p->pointer_link.low);
-	bool second_flag = get_flag_from_byte(p->pointer_value.high);
-	bool first_flag  = get_flag_from_byte(p->pointer_value.low);
+	uint8_t third_flag  = (uint8_t)((get_flag_from_byte(p->pointer_link.low)   << 2) & 0xFF);
+	uint8_t second_flag = (uint8_t)((get_flag_from_byte(p->pointer_value.high) << 1) & 0xFF);
+	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p->pointer_value.low)  << 0) & 0xFF);
 
-	uint8_t br_num = (uint8_t)(first_flag << 0 | second_flag << 1 | third_flag << 2);
+	uint8_t br_num = (uint8_t)(first_flag | second_flag | third_flag);
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
 						   (cpu->br[br_num].start_page.low.data  << 8));
