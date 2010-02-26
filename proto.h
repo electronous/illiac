@@ -1,5 +1,3 @@
-#include <stdlib.h>
-#include <stdio.h>
 #include <stdint.h>
 #include <stdbool.h>
 
@@ -78,6 +76,18 @@ void put_word_into_memory(word_t arg, raw_address_t addr);
 uint8_t get_data_from_byte(byte_t byte);
 
 bool get_flag_from_byte(byte_t byte);
+
+void set_flag_byte(byte_t *byte);
+
+void clear_flag_byte(byte_t *byte);
+
+void set_flag_halfword(halfword_t *halfword, size_t byte_num);
+
+void clear_flag_halfword(halfword_t *halfword, size_t byte_num);
+
+void set_flag_word(word_t *word, size_t byte_num);
+
+void clear_flag_word(word_t *word, size_t byte_num);
 
 uint16_t get_data_from_halfword(halfword_t halfword);
 

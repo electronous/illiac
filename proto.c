@@ -1,3 +1,4 @@
+#include <assert.h>
 #include <stdlib.h>
 #include <stdio.h>
 
@@ -139,6 +140,76 @@ word_t put_data_into_word(uint32_t data)
 	return word;
 }
 
+void set_flag_byte(byte_t *byte)
+{
+	byte->flag = true;
+}
+
+void clear_flag_byte(byte_t *byte)
+{
+	byte->flag = false;
+}
+
+void set_flag_halfword(halfword_t *halfword, size_t byte_num)
+{
+	assert(byte_num <= 1);
+
+	if (byte_num == 0)
+	{
+		set_flag_byte(&(halfword->high));
+	}
+	else
+	{
+		set_flag_byte(&(halfword->low));
+	}
+}
+
+void clear_flag_halfword(halfword_t *halfword, size_t byte_num)
+{
+	assert(byte_num <= 1);
+
+	if (byte_num == 0)
+	{
+		clear_flag_byte(&(halfword->high));
+	}
+	else
+	{
+		clear_flag_byte(&(halfword->low));
+	}
+}
+
+void set_flag_word(word_t *word, size_t byte_num)
+{
+	size_t halfword_num = byte_num % 2;
+
+	assert(byte_num <= 3);
+
+	if (byte_num <= 1)
+	{
+		set_flag_halfword(&(word->high), halfword_num);
+	}
+	else
+	{
+		set_flag_halfword(&(word->low), halfword_num);
+	}
+}
+
+void clear_flag_word(word_t *word, size_t byte_num)
+{
+	size_t halfword_num = byte_num % 2;
+
+	assert(byte_num <= 3);
+
+	if (byte_num <= 1)
+	{
+		clear_flag_halfword(&(word->high), halfword_num);
+	}
+	else
+	{
+		clear_flag_halfword(&(word->low), halfword_num);
+	}
+}
+
 void copy_byte_flags(const byte_t *from, byte_t *to)
 {
 	to->flag = get_flag_from_byte(*from);
@@ -264,6 +335,7 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 	put_word_into_memory(arg, operand_pointer);
 }
 
+/* XXX: abs_word? */
 void abs_long(cpu_t *cpu)
 {
 	word_t operand, new_stack_value;
@@ -283,7 +355,7 @@ void abs_long(cpu_t *cpu)
 	has_overflowed = abs_data >> 31;
 	if (has_overflowed)
 	{
-		new_stack_value.high.low.flag = true;
+		set_flag_word(&new_stack_value, 1);
 	}
 
 	push_operand_word(new_stack_value, cpu);
