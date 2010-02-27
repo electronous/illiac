@@ -14,14 +14,14 @@ typedef struct
 
 typedef struct
 {
-	byte_t high;
 	byte_t low;
+	byte_t high;
 } halfword_t;
 
 typedef struct
 {
-	halfword_t high;
 	halfword_t low;
+	halfword_t high;
 } word_t;
 
 typedef struct

@@ -159,11 +159,11 @@ void set_flag_halfword(halfword_t *halfword, size_t byte_num)
 
 	if (byte_num == 0)
 	{
-		set_flag_byte(&(halfword->high));
+		set_flag_byte(&(halfword->low));
 	}
 	else
 	{
-		set_flag_byte(&(halfword->low));
+		set_flag_byte(&(halfword->high));
 	}
 }
 
@@ -173,11 +173,11 @@ void clear_flag_halfword(halfword_t *halfword, size_t byte_num)
 
 	if (byte_num == 0)
 	{
-		clear_flag_byte(&(halfword->high));
+		clear_flag_byte(&(halfword->low));
 	}
 	else
 	{
-		clear_flag_byte(&(halfword->low));
+		clear_flag_byte(&(halfword->high));
 	}
 }
 
@@ -189,11 +189,11 @@ void set_flag_word(word_t *word, size_t byte_num)
 
 	if (byte_num <= 1)
 	{
-		set_flag_halfword(&(word->high), halfword_num);
+		set_flag_halfword(&(word->low), halfword_num);
 	}
 	else
 	{
-		set_flag_halfword(&(word->low), halfword_num);
+		set_flag_halfword(&(word->high), halfword_num);
 	}
 }
 
@@ -205,11 +205,11 @@ void clear_flag_word(word_t *word, size_t byte_num)
 
 	if (byte_num <= 1)
 	{
-		clear_flag_halfword(&(word->high), halfword_num);
+		clear_flag_halfword(&(word->low), halfword_num);
 	}
 	else
 	{
-		clear_flag_halfword(&(word->low), halfword_num);
+		clear_flag_halfword(&(word->high), halfword_num);
 	}
 }
 
@@ -358,7 +358,7 @@ void abs_long(cpu_t *cpu)
 	has_overflowed = abs_data >> 31;
 	if (has_overflowed)
 	{
-		set_flag_word(&new_stack_value, 1);
+		set_flag_word(&new_stack_value, 0);
 	}
 
 	push_operand_word(new_stack_value, cpu);
