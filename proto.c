@@ -1,5 +1,4 @@
 #include <assert.h>
-#include <stdlib.h>
 #include <stdio.h>
 
 #include "proto.h"
@@ -381,7 +380,7 @@ int main(void)
 	if (core_memory == NULL)
 	{
 		printf("oh god help!!");
-		exit(-1);
+		exit(EXIT_FAILURE);
 	}
 	for (;;)
 	{
@@ -397,5 +396,5 @@ int main(void)
 		cpu.pr[0] = get_pointer_register_from_memory(next);
 	}
 	free(core_memory);
-	return 0;
+	return EXIT_SUCCESS;
 }
