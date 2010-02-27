@@ -12,6 +12,8 @@ raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p->pointer_value.low)  << 0) & 0xFF);
 
 	uint8_t br_num = (uint8_t)(first_flag | second_flag | third_flag);
+	// XXX: br_num can be 0b111, cpu->br array only has 6 entries
+	assert(br_num < sizeof(cpu->br)/sizeof(cpu->br[0]));
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
 						   (cpu->br[br_num].start_page.low.data  << 8));
@@ -50,6 +52,7 @@ number_format_t get_pointer_register_from_memory(raw_address_t addr)
 
 byte_t get_byte_from_memory(raw_address_t addr)
 {
+	assert(addr < (raw_address_t)(1 << 24));
 	return core_memory[addr];
 }
 
@@ -73,6 +76,7 @@ word_t get_word_from_memory(raw_address_t addr)
 
 void put_byte_into_memory(byte_t arg, raw_address_t addr)
 {
+	assert(addr < (raw_address_t)(1 << 24));
 	core_memory[addr] = arg;
 }
 
