@@ -3,7 +3,9 @@ CFLAGS=-std=c99 -pedantic -Wall -Wextra
 
 all: proto
 
-proto: proto.c proto.h
+proto: proto.o
+
+proto.o: proto.c proto.h
 
 clean:
 	rm -f proto *.o
