@@ -13,7 +13,7 @@ raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p->pointer_value.low)  << 0) & 0xFF);
 
 	uint8_t br_num = (uint8_t)(first_flag | second_flag | third_flag);
-	// XXX: br_num can be 0b111, cpu->br array only has 6 entries
+
 	assert(br_num < sizeof(cpu->br)/sizeof(cpu->br[0]));
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
