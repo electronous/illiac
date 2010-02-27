@@ -45,7 +45,7 @@ typedef struct
 	halfword_t start_page;
 } base_pointer_t;
 
-typedef uint32_t raw_address_t;
+typedef size_t raw_address_t;
 
 typedef struct
 {
@@ -126,7 +126,7 @@ void abs_short(cpu_t *cpu);
 
 void abs_long(cpu_t *cpu);
 
-void hcf(cpu_t *cpu);
+void hcf(cpu_t *cpu, byte_t opcode);
 
 void execute(byte_t opcode, cpu_t *cpu);
 
