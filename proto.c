@@ -379,7 +379,7 @@ void abs_short(cpu_t *cpu)
 	abs_data = get_data_from_halfword(operand);
 	if (abs_data >> 15)
 	{
-		abs_data = ~abs_data + 1;
+		abs_data = (uint16_t)(~abs_data + 1);
 	}
 
 	new_stack_value = put_data_into_halfword(abs_data);
@@ -434,10 +434,10 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_value);
 		printf("\tPointer Value: %X\n", temp16);
 		printf("\tFlags: ");
-		printf("%u", get_flag_from_halfword(cpu->pr[i].pointer_link, 1));
-		printf("%u", get_flag_from_halfword(cpu->pr[i].pointer_link, 0));
-		printf("%u", get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
-		printf("%u\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 1));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 0));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
+		printf("%hu\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
 	}
 
 	for(i = 0; i < 6; i++) {
@@ -447,10 +447,10 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		temp16 = get_data_from_halfword(cpu->br[i].start_page);
 		printf("\tBase Start Page: %X\n", temp16);
 		printf("\tFlags: ");
-		printf("%u", get_flag_from_byte(cpu->br[i].zero));
-		printf("%u", get_flag_from_byte(cpu->br[i].bounds));
-		printf("%u", get_flag_from_halfword(cpu->br[i].start_page, 1));
-		printf("%u\n\n", get_flag_from_halfword(cpu->br[i].start_page, 0));
+		printf("%hu", get_flag_from_byte(cpu->br[i].zero));
+		printf("%hu", get_flag_from_byte(cpu->br[i].bounds));
+		printf("%hu", get_flag_from_halfword(cpu->br[i].start_page, 1));
+		printf("%hu\n\n", get_flag_from_halfword(cpu->br[i].start_page, 0));
 	}
 
 	printf("ASF Register\n");
@@ -498,6 +498,7 @@ void execute(byte_t opcode, cpu_t *cpu)
 	}
 }
 
+static
 void load_basic_program_1(cpu_t *cpu)
 {
 	/* Program 1 does the following

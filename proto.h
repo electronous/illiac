@@ -82,13 +82,13 @@ void set_flag_byte(byte_t *byte);
 
 void clear_flag_byte(byte_t *byte);
 
-bool get_flag_halfword(halfword_t halfword, size_t byte_num);
+bool get_flag_from_halfword(halfword_t halfword, size_t byte_num);
 
 void set_flag_halfword(halfword_t *halfword, size_t byte_num);
 
 void clear_flag_halfword(halfword_t *halfword, size_t byte_num);
 
-bool get_flag_word(word_t word, size_t byte_num);
+bool get_flag_from_word(word_t word, size_t byte_num);
 
 void set_flag_word(word_t *word, size_t byte_num);
 
