@@ -129,3 +129,5 @@ void abs_long(cpu_t *cpu);
 void hcf(cpu_t *cpu);
 
 void execute(byte_t opcode, cpu_t *cpu);
+
+void cpu_ctor(cpu_t *cpu);

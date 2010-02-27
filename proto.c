@@ -1,3 +1,4 @@
+#include <string.h>
 #include <assert.h>
 #include <stdio.h>
 
@@ -482,13 +483,18 @@ void execute(byte_t opcode, cpu_t *cpu)
 void load_basic_program_1(cpu_t *cpu)
 {
 	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
-
 }
 
-#include <errno.h>
+void cpu_ctor(cpu_t *cpu)
+{
+	memset(cpu, 0, sizeof(*cpu));
+}
+
 int main(void)
 {
 	cpu_t cpu;
+
+	cpu_ctor(&cpu);
 	core_memory = (byte_t *)malloc(sizeof(byte_t [1 << 24]));
 	if (core_memory == NULL)
 	{
