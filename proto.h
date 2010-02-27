@@ -14,14 +14,14 @@ typedef struct
 
 typedef struct
 {
-	byte_t low;
 	byte_t high;
+	byte_t low;
 } halfword_t;
 
 typedef struct
 {
-	halfword_t low;
 	halfword_t high;
+	halfword_t low;
 } word_t;
 
 typedef struct
@@ -82,9 +82,13 @@ void set_flag_byte(byte_t *byte);
 
 void clear_flag_byte(byte_t *byte);
 
+bool get_flag_halfword(halfword_t halfword, size_t byte_num);
+
 void set_flag_halfword(halfword_t *halfword, size_t byte_num);
 
 void clear_flag_halfword(halfword_t *halfword, size_t byte_num);
+
+bool get_flag_word(word_t word, size_t byte_num);
 
 void set_flag_word(word_t *word, size_t byte_num);
 
@@ -118,6 +122,10 @@ void push_operand_halfword(halfword_t arg, cpu_t *cpu);
 
 void push_operand_word(word_t arg, cpu_t *cpu);
 
+void abs_short(cpu_t *cpu);
+
 void abs_long(cpu_t *cpu);
+
+void hcf(cpu_t *cpu);
 
 void execute(byte_t opcode, cpu_t *cpu);
