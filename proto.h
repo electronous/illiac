@@ -121,3 +121,5 @@ void push_operand_word(word_t arg, cpu_t *cpu);
 void abs_long(cpu_t *cpu);
 
 void execute(byte_t opcode, cpu_t *cpu);
+
+void cpu_ctor(cpu_t *cpu);
