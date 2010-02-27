@@ -372,14 +372,14 @@ void execute(byte_t opcode, cpu_t *cpu)
 		}
 	}
 }
-
+#include <errno.h>
 int main(void)
 {
 	cpu_t cpu;
 	core_memory = (byte_t *)malloc(sizeof(byte_t [1 << 24]));
 	if (core_memory == NULL)
 	{
-		printf("oh god help!!");
+		perror("error allocating core_memory");
 		exit(EXIT_FAILURE);
 	}
 	for (;;)
