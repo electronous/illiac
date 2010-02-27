@@ -478,6 +478,15 @@ void execute(byte_t opcode, cpu_t *cpu)
 				break;
 		}
 	}
+	else
+	{
+		switch (opcode.data)
+		{
+			default:
+				hcf(cpu);
+				break;
+		}
+	}
 }
 
 void load_basic_program_1(cpu_t *cpu)
