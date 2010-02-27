@@ -98,11 +98,6 @@ uint8_t get_data_from_byte(byte_t byte)
 	return byte.data;
 }
 
-bool get_flag_from_byte(byte_t byte)
-{
-	return byte.flag;
-}
-
 uint16_t get_data_from_halfword(halfword_t halfword)
 {
 	uint8_t high = get_data_from_byte(halfword.high);
@@ -144,6 +139,11 @@ word_t put_data_into_word(uint32_t data)
 	return word;
 }
 
+bool get_flag_from_byte(byte_t byte)
+{
+	return byte.flag;
+}
+
 void set_flag_byte(byte_t *byte)
 {
 	byte->flag = true;
@@ -154,17 +154,31 @@ void clear_flag_byte(byte_t *byte)
 	byte->flag = false;
 }
 
+bool get_flag_from_halfword(halfword_t halfword, size_t byte_num)
+{
+	assert(byte_num <= 1);
+
+	if (byte_num == 0)
+	{
+		return get_flag_from_byte(halfword.high);
+	}
+	else
+	{
+		return get_flag_from_byte(halfword.low);
+	}
+}
+
 void set_flag_halfword(halfword_t *halfword, size_t byte_num)
 {
 	assert(byte_num <= 1);
 
 	if (byte_num == 0)
 	{
-		set_flag_byte(&(halfword->low));
+		set_flag_byte(&(halfword->high));
 	}
 	else
 	{
-		set_flag_byte(&(halfword->high));
+		set_flag_byte(&(halfword->low));
 	}
 }
 
@@ -174,11 +188,27 @@ void clear_flag_halfword(halfword_t *halfword, size_t byte_num)
 
 	if (byte_num == 0)
 	{
-		clear_flag_byte(&(halfword->low));
+		clear_flag_byte(&(halfword->high));
 	}
 	else
 	{
-		clear_flag_byte(&(halfword->high));
+		clear_flag_byte(&(halfword->low));
+	}
+}
+
+bool get_flag_from_word(word_t word, size_t byte_num)
+{
+	size_t halfword_num = byte_num % 2;
+
+	assert(byte_num <= 3);
+
+	if (byte_num <= 1)
+	{
+		return get_flag_from_halfword(word.high, halfword_num);
+	}
+	else
+	{
+		return get_flag_from_halfword(word.low, halfword_num);
 	}
 }
 
@@ -190,11 +220,11 @@ void set_flag_word(word_t *word, size_t byte_num)
 
 	if (byte_num <= 1)
 	{
-		set_flag_halfword(&(word->low), halfword_num);
+		set_flag_halfword(&(word->high), halfword_num);
 	}
 	else
 	{
-		set_flag_halfword(&(word->high), halfword_num);
+		set_flag_halfword(&(word->low), halfword_num);
 	}
 }
 
@@ -206,11 +236,11 @@ void clear_flag_word(word_t *word, size_t byte_num)
 
 	if (byte_num <= 1)
 	{
-		clear_flag_halfword(&(word->low), halfword_num);
+		clear_flag_halfword(&(word->high), halfword_num);
 	}
 	else
 	{
-		clear_flag_halfword(&(word->high), halfword_num);
+		clear_flag_halfword(&(word->low), halfword_num);
 	}
 }
 
@@ -339,7 +369,31 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 	put_word_into_memory(arg, operand_pointer);
 }
 
-/* XXX: abs_word? */
+void abs_short(cpu_t *cpu)
+{
+	halfword_t operand, new_stack_value;
+	uint16_t abs_data;
+	bool has_overflowed;
+
+	operand = pop_operand_halfword(cpu);
+	abs_data = get_data_from_halfword(operand);
+	if (abs_data >> 15)
+	{
+		abs_data = ~abs_data + 1;
+	}
+
+	new_stack_value = put_data_into_halfword(abs_data);
+	copy_halfword_flags(&operand, &new_stack_value);
+
+	has_overflowed = abs_data >> 15;
+	if (has_overflowed)
+	{
+		set_flag_halfword(&new_stack_value, 0);
+	}
+
+	push_operand_halfword(new_stack_value, cpu);
+}
+
 void abs_long(cpu_t *cpu)
 {
 	word_t operand, new_stack_value;
@@ -365,17 +419,70 @@ void abs_long(cpu_t *cpu)
 	push_operand_word(new_stack_value, cpu);
 }
 
+void hcf(cpu_t *cpu)
+{
+	size_t i;
+	uint16_t temp16;
+	uint8_t temp8;
+	printf("HCF Instruction caught!\n");
+	for(i = 0; i < 14; i++) {
+		printf("Pointer Register: %lu\n", i);
+		temp16 = get_data_from_halfword(cpu->pr[i].pointer_link);
+		printf("\tPointer Link: %X\n", temp16);
+		temp16 = get_data_from_halfword(cpu->pr[i].pointer_value);
+		printf("\tPointer Value: %X\n", temp16);
+		printf("\tFlags: ");
+		printf("%u", get_flag_from_halfword(cpu->pr[i].pointer_link, 1));
+		printf("%u", get_flag_from_halfword(cpu->pr[i].pointer_link, 0));
+		printf("%u", get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
+		printf("%u\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
+	}
+
+	for(i = 0; i < 6; i++) {
+		printf("Base Register: %lu\n", i);
+		temp8 = get_data_from_byte(cpu->br[i].bounds);
+		printf("\tBase Bounds: %X\n", temp8);
+		temp16 = get_data_from_halfword(cpu->br[i].start_page);
+		printf("\tBase Start Page: %X\n", temp16);
+		printf("\tFlags: ");
+		printf("%u", get_flag_from_byte(cpu->br[i].zero));
+		printf("%u", get_flag_from_byte(cpu->br[i].bounds));
+		printf("%u", get_flag_from_halfword(cpu->br[i].start_page, 1));
+		printf("%u\n\n", get_flag_from_halfword(cpu->br[i].start_page, 0));
+	}
+
+	printf("ASF Register\n");
+	temp16 = get_data_from_halfword(cpu->pr_14.consecutive_storage_link);
+	printf("\tConsecutive Storage Link: %X\n", temp16);
+	temp16 = get_data_from_halfword(cpu->pr_14.free_list_link);
+	printf("\tFree List Link: %X\n\n", temp16);
+
+	exit(EXIT_FAILURE);
+
+}
+
 void execute(byte_t opcode, cpu_t *cpu)
 {
 	if (get_flag_from_byte(opcode))
 	{
 		switch (opcode.data)
 		{
+			case b(10010100):
+				abs_short(cpu);
+				break;
 			case b(10010101):
 				abs_long(cpu);
 				break;
+			default:
+				hcf(cpu);
+				break;
 		}
 	}
+}
+
+void load_basic_program_1(cpu_t *cpu)
+{
+	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
 }
 
 void cpu_ctor(cpu_t *cpu)
