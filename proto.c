@@ -53,7 +53,7 @@ number_format_t get_pointer_register_from_memory(raw_address_t addr)
 
 byte_t get_byte_from_memory(raw_address_t addr)
 {
-	assert(addr < (raw_address_t)(1 << 24));
+	assert(addr < (raw_address_t)NUM_BYTES);
 	return core_memory[addr];
 }
 
@@ -77,7 +77,7 @@ word_t get_word_from_memory(raw_address_t addr)
 
 void put_byte_into_memory(byte_t arg, raw_address_t addr)
 {
-	assert(addr < (raw_address_t)(1 << 24));
+	assert(addr < (raw_address_t)NUM_BYTES);
 	core_memory[addr] = arg;
 }
 
@@ -730,7 +730,7 @@ int main(void)
 	cpu_t cpu;
 
 	cpu_ctor(&cpu);
-	core_memory = (byte_t *)malloc(sizeof(byte_t [1 << 24]));
+	core_memory = (byte_t *)malloc(sizeof(byte_t [NUM_BYTES]));
 	if (core_memory == NULL)
 	{
 		perror("error allocating core_memory");

@@ -49,6 +49,7 @@ typedef size_t raw_address_t;
 
 #define PR_SIZE 14
 #define BR_SIZE 6
+#define NUM_BYTES (1 << 24)
 
 typedef struct
 {
