@@ -574,7 +574,7 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		get_flag_from_byte(opcode),
 		get_data_from_byte(opcode));
 
-	for (size_t i = 0; i < BR_SIZE; i++)
+	for (size_t i = 0; i < PR_SIZE; i++)
 	{
 		printf("Pointer Register: %zu\n", i);
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_link);
@@ -588,7 +588,7 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		printf("%hu\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
 	}
 
-	for (size_t i = 0; i < PR_SIZE; i++)
+	for (size_t i = 0; i < BR_SIZE; i++)
 	{
 		printf("Base Register: %zu\n", i);
 		temp8 = get_data_from_byte(cpu->br[i].bounds);
