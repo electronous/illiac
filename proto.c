@@ -455,14 +455,16 @@ void add_short(cpu_t *cpu)
 	data2 = get_data_from_halfword(operand2);
 
 	result = (int16_t)(data1 + data2);
+
+	has_overflowed = true;
 	if (data1 >= 0 && result < data2)
 	{
-		has_overflowed = false;
+		has_overflowed = true;
 	}
 
 	if (data1 < 0 && result > data2)
 	{
-		has_overflowed = false;
+		has_overflowed = true;
 	}
 
 	new_stack_value = put_data_into_halfword(result);
@@ -489,14 +491,16 @@ void add_long(cpu_t *cpu)
 	data2 = get_data_from_word(operand2);
 
 	result = (uint32_t)(data1 + data2);
+
+	has_overflowed = false;
 	if (data1 >= 0 && result < data2)
 	{
-		has_overflowed = false;
+		has_overflowed = true;
 	}
 
 	if (data1 < 0 && result > data2)
 	{
-		has_overflowed = false;
+		has_overflowed = true;
 	}
 
 	new_stack_value = put_data_into_word(result);
@@ -613,8 +617,8 @@ void hcf(cpu_t *cpu, byte_t opcode)
 
 void execute(byte_t opcode, cpu_t *cpu)
 {
-	uint16_t new_pointer_value;
 	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[0].pointer_value);
+	uint16_t new_pointer_value = 0;
 
 	if (get_flag_from_byte(opcode))
 	{
@@ -630,7 +634,6 @@ void execute(byte_t opcode, cpu_t *cpu)
 				break;
 			default:
 				hcf(cpu, opcode);
-				new_pointer_value = 0;
 				break;
 		}
 	}
@@ -640,16 +643,18 @@ void execute(byte_t opcode, cpu_t *cpu)
 		{
 			case b(00100100):
 				dup_byte(cpu);
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
 				break;
 			case b(00100101):
 				dup_halfword(cpu);
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
 				break;
 			case b(00100110):
 				dup_word(cpu);
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
 				break;
 			default:
 				hcf(cpu, opcode);
-				new_pointer_value = 0;
 				break;
 		}
 	}
