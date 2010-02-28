@@ -126,6 +126,10 @@ void abs_short(cpu_t *cpu);
 
 void abs_long(cpu_t *cpu);
 
+void add_short(cpu_t *cpu);
+
+void add_long(cpu_t *cpu);
+
 void dup_byte(cpu_t *cpu);
 
 void dup_halfword(cpu_t *cpu);

@@ -426,6 +426,72 @@ void xch_word(cpu_t *cpu)
 	push_operand_word(operand2, cpu);
 }
 
+void add_short(cpu_t *cpu)
+{
+	halfword_t operand1, operand2, new_stack_value;
+	int16_t data1, data2, result;
+	bool has_overflowed;
+
+	operand1 = pop_operand_halfword(cpu);
+	operand2 = pop_operand_halfword(cpu);
+	data1 = get_data_from_halfword(operand1);
+	data2 = get_data_from_halfword(operand2);
+
+	result = data1 + data2;
+	if (data1 >= 0 && result < data2)
+	{
+		has_overflowed = false;
+	}
+
+	if (data1 < 0 && result > data2)
+	{
+		has_overflowed = false;
+	}
+
+	new_stack_value = put_data_into_halfword(result);
+	/* XXX: What do we do with the flags of the new stack value? */
+
+	if (has_overflowed)
+	{
+		set_flag_halfword(&new_stack_value, 0);
+	}
+
+	push_operand_halfword(new_stack_value, cpu);
+}
+
+void add_long(cpu_t *cpu)
+{
+	word_t operand1, operand2, new_stack_value;
+	int32_t data1, data2, result;
+	bool has_overflowed;
+
+	operand1 = pop_operand_word(cpu);
+	operand2 = pop_operand_word(cpu);
+	data1 = get_data_from_word(operand1);
+	data2 = get_data_from_word(operand2);
+
+	result = data1 + data2;
+	if (data1 >= 0 && result < data2)
+	{
+		has_overflowed = false;
+	}
+
+	if (data1 < 0 && result > data2)
+	{
+		has_overflowed = false;
+	}
+
+	new_stack_value = put_data_into_word(result);
+	/* XXX: What do we do with the flags of the new stack value? */
+
+	if (has_overflowed)
+	{
+		set_flag_word(&new_stack_value, 0);
+	}
+
+	push_operand_word(new_stack_value, cpu);
+}
+
 void abs_short(cpu_t *cpu)
 {
 	halfword_t operand, new_stack_value;
