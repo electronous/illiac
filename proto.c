@@ -369,6 +369,33 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 	put_word_into_memory(arg, operand_pointer);
 }
 
+void dup_byte(cpu_t *cpu)
+{
+	byte_t operand;
+
+	operand = pop_operand_byte(cpu);
+	push_operand_byte(operand, cpu);
+	push_operand_byte(operand, cpu);
+}
+
+void dup_halfword(cpu_t *cpu)
+{
+	halfword_t operand;
+
+	operand = pop_operand_halfword(cpu);
+	push_operand_halfword(operand, cpu);
+	push_operand_halfword(operand, cpu);
+}
+
+void dup_word(cpu_t *cpu)
+{
+	word_t operand;
+
+	operand = pop_operand_word(cpu);
+	push_operand_word(operand, cpu);
+	push_operand_word(operand, cpu);
+}
+
 void abs_short(cpu_t *cpu)
 {
 	halfword_t operand, new_stack_value;
@@ -467,7 +494,6 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
 	printf("\t%hhX\n\n", get_data_from_byte(pop_operand_byte(cpu)));
 	exit(EXIT_FAILURE);
-
 }
 
 void execute(byte_t opcode, cpu_t *cpu)
@@ -497,6 +523,15 @@ void execute(byte_t opcode, cpu_t *cpu)
 	{
 		switch (opcode.data)
 		{
+			case b(00100100):
+				dup_byte(cpu);
+				break;
+			case b(00100101):
+				dup_halfword(cpu);
+				break;
+			case b(00100110):
+				dup_word(cpu);
+				break;
 			default:
 				hcf(cpu, opcode);
 				new_pointer_value = 0;
