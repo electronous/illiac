@@ -582,10 +582,11 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_value);
 		printf("\tPointer Value: %hX\n", temp16);
 		printf("\tFlags: ");
-		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 1));
-		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 0));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link,  1));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link,  0));
 		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
-		printf("%hu\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
+		printf("\n\n");
 	}
 
 	for (size_t i = 0; i < BR_SIZE; i++)
@@ -598,8 +599,9 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		printf("\tFlags: ");
 		printf("%hhu", get_flag_from_byte(cpu->br[i].zero));
 		printf("%hhu", get_flag_from_byte(cpu->br[i].bounds));
-		printf("%hu", get_flag_from_halfword(cpu->br[i].start_page, 1));
-		printf("%hu\n\n", get_flag_from_halfword(cpu->br[i].start_page, 0));
+		printf("%hu",  get_flag_from_halfword(cpu->br[i].start_page, 1));
+		printf("%hu",  get_flag_from_halfword(cpu->br[i].start_page, 0));
+		printf("\n\n");
 	}
 
 	printf("ASF Register\n");
@@ -609,12 +611,13 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	printf("\tFree List Link: %hX\n\n", temp16);
 
 	printf("Stack values (top to bottom)\n");
-	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\n");
 	exit(EXIT_FAILURE);
 }
 
