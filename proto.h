@@ -47,10 +47,13 @@ typedef struct
 
 typedef size_t raw_address_t;
 
+#define PR_SIZE 14
+#define BR_SIZE 6
+
 typedef struct
 {
-	number_format_t pr[14];
-	base_pointer_t br[6];
+	number_format_t pr[PR_SIZE];
+	base_pointer_t br[BR_SIZE];
 	asf_t pr_14;
 } cpu_t;
 

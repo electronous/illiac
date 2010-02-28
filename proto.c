@@ -14,7 +14,7 @@ raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 
 	uint8_t br_num = (uint8_t)(first_flag | second_flag | third_flag);
 
-	assert(br_num < sizeof(cpu->br)/sizeof(cpu->br[0]));
+	assert(br_num < BR_SIZE);
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
 						   (cpu->br[br_num].start_page.low.data  << 8));
@@ -567,13 +567,15 @@ void abs_long(cpu_t *cpu)
 
 void hcf(cpu_t *cpu, byte_t opcode)
 {
-	size_t i;
 	uint16_t temp16;
 	uint8_t temp8;
 	printf("HCF Instruction caught!\n");
-	printf("Illegal Opcode: %hhu%02hhX\n", get_flag_from_byte(opcode),
-				get_data_from_byte(opcode));
-	for(i = 0; i < 14; i++) {
+	printf("Illegal Opcode: %hhu%02hhX\n",
+		get_flag_from_byte(opcode),
+		get_data_from_byte(opcode));
+
+	for (size_t i = 0; i < BR_SIZE; i++)
+	{
 		printf("Pointer Register: %zu\n", i);
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_link);
 		printf("\tPointer Link: %hX\n", temp16);
@@ -586,7 +588,8 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		printf("%hu\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
 	}
 
-	for(i = 0; i < 6; i++) {
+	for (size_t i = 0; i < PR_SIZE; i++)
+	{
 		printf("Base Register: %zu\n", i);
 		temp8 = get_data_from_byte(cpu->br[i].bounds);
 		printf("\tBase Bounds: %hhX\n", temp8);
