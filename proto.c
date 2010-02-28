@@ -396,6 +396,36 @@ void dup_word(cpu_t *cpu)
 	push_operand_word(operand, cpu);
 }
 
+void xch_byte(cpu_t *cpu)
+{
+	byte_t operand1, operand2;
+
+	operand1 = pop_operand_byte(cpu);
+	operand2 = pop_operand_byte(cpu);
+	push_operand_byte(operand1, cpu);
+	push_operand_byte(operand2, cpu);
+}
+
+void xch_halfword(cpu_t *cpu)
+{
+	halfword_t operand1, operand2;
+
+	operand1 = pop_operand_halfword(cpu);
+	operand2 = pop_operand_halfword(cpu);
+	push_operand_halfword(operand1, cpu);
+	push_operand_halfword(operand2, cpu);
+}
+
+void xch_word(cpu_t *cpu)
+{
+	word_t operand1, operand2;
+
+	operand1 = pop_operand_word(cpu);
+	operand2 = pop_operand_word(cpu);
+	push_operand_word(operand1, cpu);
+	push_operand_word(operand2, cpu);
+}
+
 void abs_short(cpu_t *cpu)
 {
 	halfword_t operand, new_stack_value;

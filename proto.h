@@ -132,6 +132,12 @@ void dup_halfword(cpu_t *cpu);
 
 void dup_word(cpu_t *cpu);
 
+void xch_byte(cpu_t *cpu);
+
+void xch_halfword(cpu_t *cpu);
+
+void xch_word(cpu_t *cpu);
+
 void hcf(cpu_t *cpu, byte_t opcode);
 
 void execute(byte_t opcode, cpu_t *cpu);
