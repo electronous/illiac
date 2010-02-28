@@ -425,14 +425,14 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	uint16_t temp16;
 	uint8_t temp8;
 	printf("HCF Instruction caught!\n");
-	printf("Illegal Opcode: %u%02X\n", get_flag_from_byte(opcode), 
+	printf("Illegal Opcode: %hu%02hhX\n", get_flag_from_byte(opcode),
 				get_data_from_byte(opcode));
 	for(i = 0; i < 14; i++) {
-		printf("Pointer Register: %lu\n", i);
+		printf("Pointer Register: %zu\n", i);
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_link);
-		printf("\tPointer Link: %X\n", temp16);
+		printf("\tPointer Link: %hX\n", temp16);
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_value);
-		printf("\tPointer Value: %X\n", temp16);
+		printf("\tPointer Value: %hX\n", temp16);
 		printf("\tFlags: ");
 		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 1));
 		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 0));
@@ -441,11 +441,11 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	}
 
 	for(i = 0; i < 6; i++) {
-		printf("Base Register: %lu\n", i);
+		printf("Base Register: %zu\n", i);
 		temp8 = get_data_from_byte(cpu->br[i].bounds);
-		printf("\tBase Bounds: %X\n", temp8);
+		printf("\tBase Bounds: %hhX\n", temp8);
 		temp16 = get_data_from_halfword(cpu->br[i].start_page);
-		printf("\tBase Start Page: %X\n", temp16);
+		printf("\tBase Start Page: %hX\n", temp16);
 		printf("\tFlags: ");
 		printf("%hu", get_flag_from_byte(cpu->br[i].zero));
 		printf("%hu", get_flag_from_byte(cpu->br[i].bounds));
@@ -455,17 +455,17 @@ void hcf(cpu_t *cpu, byte_t opcode)
 
 	printf("ASF Register\n");
 	temp16 = get_data_from_halfword(cpu->pr_14.consecutive_storage_link);
-	printf("\tConsecutive Storage Link: %X\n", temp16);
+	printf("\tConsecutive Storage Link: %hX\n", temp16);
 	temp16 = get_data_from_halfword(cpu->pr_14.free_list_link);
-	printf("\tFree List Link: %X\n\n", temp16);
+	printf("\tFree List Link: %hX\n\n", temp16);
 
 	printf("Stack values (top to bottom)\n");
-	printf("\t%X\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%X\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%X\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%X\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%X\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%X\n\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hX\n\n", get_data_from_byte(pop_operand_byte(cpu)));
 	exit(EXIT_FAILURE);
 
 }
@@ -481,11 +481,11 @@ void execute(byte_t opcode, cpu_t *cpu)
 		{
 			case b(10010100):
 				abs_short(cpu);
-				new_pointer_value = old_pointer_value + 1;
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
 				break;
 			case b(10010101):
 				abs_long(cpu);
-				new_pointer_value = old_pointer_value + 1;
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
 				break;
 			default:
 				hcf(cpu, opcode);
@@ -502,11 +502,6 @@ void execute(byte_t opcode, cpu_t *cpu)
 				new_pointer_value = 0;
 				break;
 		}
-	}
-
-	if (new_pointer_value < old_pointer_value)
-	{
-		hcf(cpu, opcode);
 	}
 
 	cpu->pr[0].pointer_value = put_data_into_halfword(new_pointer_value);

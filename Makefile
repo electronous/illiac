@@ -1,5 +1,5 @@
-CC=gcc
-CFLAGS=-std=c99 -pedantic -Wall -Wextra -g
+CC=icc
+CFLAGS=-std=c99 -pedantic -Wall -Wextra
 
 all: proto
 
