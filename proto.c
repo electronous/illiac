@@ -1,4 +1,3 @@
-#include <inttypes.h>
 #include <string.h>
 #include <assert.h>
 #include <stdio.h>
@@ -426,47 +425,47 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	uint16_t temp16;
 	uint8_t temp8;
 	printf("HCF Instruction caught!\n");
-	printf("Illegal Opcode: %"PRIu16"%02"PRIX8"\n", get_flag_from_byte(opcode),
+	printf("Illegal Opcode: %hhu%02hhX\n", get_flag_from_byte(opcode),
 				get_data_from_byte(opcode));
 	for(i = 0; i < 14; i++) {
 		printf("Pointer Register: %zu\n", i);
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_link);
-		printf("\tPointer Link: %"PRIX16"\n", temp16);
+		printf("\tPointer Link: %hX\n", temp16);
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_value);
-		printf("\tPointer Value: %"PRIX16"\n", temp16);
+		printf("\tPointer Value: %hX\n", temp16);
 		printf("\tFlags: ");
-		printf("%"PRIu16, get_flag_from_halfword(cpu->pr[i].pointer_link, 1));
-		printf("%"PRIu16, get_flag_from_halfword(cpu->pr[i].pointer_link, 0));
-		printf("%"PRIu16, get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
-		printf("%"PRIu16"\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 1));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link, 0));
+		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
+		printf("%hu\n\n", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
 	}
 
 	for(i = 0; i < 6; i++) {
 		printf("Base Register: %zu\n", i);
 		temp8 = get_data_from_byte(cpu->br[i].bounds);
-		printf("\tBase Bounds: %"PRIX8"\n", temp8);
+		printf("\tBase Bounds: %hhX\n", temp8);
 		temp16 = get_data_from_halfword(cpu->br[i].start_page);
-		printf("\tBase Start Page: %"PRIX16"\n", temp16);
+		printf("\tBase Start Page: %hX\n", temp16);
 		printf("\tFlags: ");
-		printf("%"PRIu8, get_flag_from_byte(cpu->br[i].zero));
-		printf("%"PRIu8, get_flag_from_byte(cpu->br[i].bounds));
-		printf("%"PRIu16, get_flag_from_halfword(cpu->br[i].start_page, 1));
-		printf("%"PRIu16"\n\n", get_flag_from_halfword(cpu->br[i].start_page, 0));
+		printf("%hhu", get_flag_from_byte(cpu->br[i].zero));
+		printf("%hhu", get_flag_from_byte(cpu->br[i].bounds));
+		printf("%hu", get_flag_from_halfword(cpu->br[i].start_page, 1));
+		printf("%hu\n\n", get_flag_from_halfword(cpu->br[i].start_page, 0));
 	}
 
 	printf("ASF Register\n");
 	temp16 = get_data_from_halfword(cpu->pr_14.consecutive_storage_link);
-	printf("\tConsecutive Storage Link: %"PRIX16"\n", temp16);
+	printf("\tConsecutive Storage Link: %hX\n", temp16);
 	temp16 = get_data_from_halfword(cpu->pr_14.free_list_link);
-	printf("\tFree List Link: %"PRIX16"\n\n", temp16);
+	printf("\tFree List Link: %hX\n\n", temp16);
 
 	printf("Stack values (top to bottom)\n");
-	printf("\t%"PRIX8"\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%"PRIX8"\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%"PRIX8"\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%"PRIX8"\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%"PRIX8"\n",   get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%"PRIX8"\n\n", get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n",   get_data_from_byte(pop_operand_byte(cpu)));
+	printf("\t%hhX\n\n", get_data_from_byte(pop_operand_byte(cpu)));
 	exit(EXIT_FAILURE);
 
 }
