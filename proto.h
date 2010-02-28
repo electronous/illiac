@@ -104,6 +104,12 @@ halfword_t put_data_into_halfword(uint16_t data);
 
 word_t put_data_into_word(uint32_t data);
 
+void or_byte_flags(const byte_t *from, byte_t *to);
+
+void or_halfword_flags(const halfword_t *from, halfword_t *to);
+
+void or_word_flags(const word_t *from, word_t *to);
+
 void copy_byte_flags(const byte_t *from, byte_t *to);
 
 void copy_halfword_flags(const halfword_t *from, halfword_t *to);

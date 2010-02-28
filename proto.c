@@ -244,6 +244,23 @@ void clear_flag_word(word_t *word, size_t byte_num)
 	}
 }
 
+void or_byte_flags(const byte_t *from, byte_t *to)
+{
+	to->flag |= get_flag_from_byte(*from);
+}
+
+void or_halfword_flags(const halfword_t *from, halfword_t *to)
+{
+	or_byte_flags(&(from->high), &(to->high));
+	or_byte_flags(&(from->low),  &(to->low));
+}
+
+void or_word_flags(const word_t *from, word_t *to)
+{
+	or_halfword_flags(&(from->high), &(to->high));
+	or_halfword_flags(&(from->low),  &(to->low));
+}
+
 void copy_byte_flags(const byte_t *from, byte_t *to)
 {
 	to->flag = get_flag_from_byte(*from);
@@ -449,7 +466,8 @@ void add_short(cpu_t *cpu)
 	}
 
 	new_stack_value = put_data_into_halfword(result);
-	/* XXX: What do we do with the flags of the new stack value? */
+	or_halfword_flags(&operand1, &new_stack_value);
+	or_halfword_flags(&operand2, &new_stack_value);
 
 	if (has_overflowed)
 	{
@@ -482,7 +500,8 @@ void add_long(cpu_t *cpu)
 	}
 
 	new_stack_value = put_data_into_word(result);
-	/* XXX: What do we do with the flags of the new stack value? */
+	or_word_flags(&operand1, &new_stack_value);
+	or_word_flags(&operand2, &new_stack_value);
 
 	if (has_overflowed)
 	{
