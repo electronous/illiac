@@ -618,6 +618,7 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
 	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
 	printf("\n");
+	free(core_memory);
 	exit(EXIT_FAILURE);
 }
 
