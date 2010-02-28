@@ -567,6 +567,7 @@ void abs_long(cpu_t *cpu)
 
 void hcf(cpu_t *cpu, byte_t opcode)
 {
+	size_t i;
 	uint16_t temp16;
 	uint8_t temp8;
 	printf("HCF Instruction caught!\n");
@@ -574,7 +575,7 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		get_flag_from_byte(opcode),
 		get_data_from_byte(opcode));
 
-	for (size_t i = 0; i < PR_SIZE; i++)
+	for (i = 0; i < PR_SIZE; i++)
 	{
 		printf("Pointer Register: %zu\n", i);
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_link);
@@ -589,7 +590,7 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		printf("\n\n");
 	}
 
-	for (size_t i = 0; i < BR_SIZE; i++)
+	for (i = 0; i < BR_SIZE; i++)
 	{
 		printf("Base Register: %zu\n", i);
 		temp8 = get_data_from_byte(cpu->br[i].bounds);
