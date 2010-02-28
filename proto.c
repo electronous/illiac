@@ -472,18 +472,24 @@ void hcf(cpu_t *cpu, byte_t opcode)
 
 void execute(byte_t opcode, cpu_t *cpu)
 {
+	uint16_t new_pointer_value;
+	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[0].pointer_value);
+
 	if (get_flag_from_byte(opcode))
 	{
 		switch (opcode.data)
 		{
 			case b(10010100):
 				abs_short(cpu);
+				new_pointer_value = old_pointer_value + 1;
 				break;
 			case b(10010101):
 				abs_long(cpu);
+				new_pointer_value = old_pointer_value + 1;
 				break;
 			default:
 				hcf(cpu, opcode);
+				new_pointer_value = 0;
 				break;
 		}
 	}
@@ -493,9 +499,17 @@ void execute(byte_t opcode, cpu_t *cpu)
 		{
 			default:
 				hcf(cpu, opcode);
+				new_pointer_value = 0;
 				break;
 		}
 	}
+
+	if (new_pointer_value < old_pointer_value)
+	{
+		hcf(cpu, opcode);
+	}
+
+	cpu->pr[0].pointer_value = put_data_into_halfword(new_pointer_value);
 }
 
 static
@@ -572,16 +586,10 @@ int main(void)
 	load_basic_program_1(&cpu);
 	for (;;)
 	{
-		raw_address_t next;
-		nf_t current_instruction = cpu.pr[0];
-
-		raw_address_t instruction = get_address_from_pointer(&current_instruction, &cpu);
+		raw_address_t instruction = get_address_from_pointer(&(cpu.pr[0]), &cpu);
 
 		byte_t opcode = get_byte_from_memory(instruction);
 		execute(opcode, &cpu);
-
-		next = get_address_from_link(&current_instruction, &cpu);
-		cpu.pr[0] = get_pointer_register_from_memory(next);
 	}
 	free(core_memory);
 	return EXIT_SUCCESS;
