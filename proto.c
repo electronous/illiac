@@ -454,7 +454,7 @@ void add_short(cpu_t *cpu)
 	data1 = get_data_from_halfword(operand1);
 	data2 = get_data_from_halfword(operand2);
 
-	result = data1 + data2;
+	result = (int16_t)(data1 + data2);
 	if (data1 >= 0 && result < data2)
 	{
 		has_overflowed = false;
@@ -488,7 +488,7 @@ void add_long(cpu_t *cpu)
 	data1 = get_data_from_word(operand1);
 	data2 = get_data_from_word(operand2);
 
-	result = data1 + data2;
+	result = (uint32_t)(data1 + data2);
 	if (data1 >= 0 && result < data2)
 	{
 		has_overflowed = false;
