@@ -571,7 +571,7 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	uint16_t temp16;
 	uint8_t temp8;
 	printf("HCF Instruction caught!\n");
-	printf("Illegal Opcode: %hhu%02hhX\n",
+	printf("Illegal Opcode: %d%02hhX\n",
 		get_flag_from_byte(opcode),
 		get_data_from_byte(opcode));
 
@@ -583,10 +583,10 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		temp16 = get_data_from_halfword(cpu->pr[i].pointer_value);
 		printf("\tPointer Value: %hX\n", temp16);
 		printf("\tFlags: ");
-		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link,  1));
-		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_link,  0));
-		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
-		printf("%hu", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
+		printf("%d", get_flag_from_halfword(cpu->pr[i].pointer_link,  1));
+		printf("%d", get_flag_from_halfword(cpu->pr[i].pointer_link,  0));
+		printf("%d", get_flag_from_halfword(cpu->pr[i].pointer_value, 1));
+		printf("%d", get_flag_from_halfword(cpu->pr[i].pointer_value, 0));
 		printf("\n\n");
 	}
 
@@ -598,10 +598,10 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		temp16 = get_data_from_halfword(cpu->br[i].start_page);
 		printf("\tBase Start Page: %hX\n", temp16);
 		printf("\tFlags: ");
-		printf("%hhu", get_flag_from_byte(cpu->br[i].zero));
-		printf("%hhu", get_flag_from_byte(cpu->br[i].bounds));
-		printf("%hu",  get_flag_from_halfword(cpu->br[i].start_page, 1));
-		printf("%hu",  get_flag_from_halfword(cpu->br[i].start_page, 0));
+		printf("%d", get_flag_from_byte(cpu->br[i].zero));
+		printf("%d", get_flag_from_byte(cpu->br[i].bounds));
+		printf("%d", get_flag_from_halfword(cpu->br[i].start_page, 1));
+		printf("%d", get_flag_from_halfword(cpu->br[i].start_page, 0));
 		printf("\n\n");
 	}
 
