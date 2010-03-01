@@ -13,10 +13,7 @@ if outfile == nil:
     abort("You must specify an output bin file")
 end
 
-
-File.open(outfile, "w") do |fh|
-    writer = ByteWriter.new(fh)
-
+ByteWriter.new(outfile).go do |writer|
     File.open(infile, "r").each do |line|
         instruction = line.split()
         opcode      = instruction[0]
