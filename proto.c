@@ -468,8 +468,7 @@ void add_short(cpu_t *cpu)
 	}
 
 	new_stack_value = put_data_into_halfword(result);
-	or_halfword_flags(&operand1, &new_stack_value);
-	or_halfword_flags(&operand2, &new_stack_value);
+	copy_halfword_flags(&operand2, &new_stack_value);
 
 	if (has_overflowed)
 	{
@@ -504,8 +503,7 @@ void add_long(cpu_t *cpu)
 	}
 
 	new_stack_value = put_data_into_word(result);
-	or_word_flags(&operand1, &new_stack_value);
-	or_word_flags(&operand2, &new_stack_value);
+	copy_word_flags(&operand2, &new_stack_value);
 
 	if (has_overflowed)
 	{
