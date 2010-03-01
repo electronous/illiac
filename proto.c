@@ -413,6 +413,21 @@ void dup_word(cpu_t *cpu)
 	push_operand_word(operand, cpu);
 }
 
+void sluff_byte(cpu_t *cpu)
+{
+	pop_operand_byte(cpu);
+}
+
+void sluff_halfword(cpu_t *cpu)
+{
+	pop_operand_halfword(cpu);
+}
+
+void sluff_word(cpu_t *cpu)
+{
+	pop_operand_word(cpu);
+}
+
 void xch_byte(cpu_t *cpu)
 {
 	byte_t operand1, operand2;

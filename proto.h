@@ -146,6 +146,12 @@ void dup_halfword(cpu_t *cpu);
 
 void dup_word(cpu_t *cpu);
 
+void sluff_byte(cpu_t *cpu);
+
+void sluff_halfword(cpu_t *cpu);
+
+void sluff_word(cpu_t *cpu);
+
 void xch_byte(cpu_t *cpu);
 
 void xch_halfword(cpu_t *cpu);
