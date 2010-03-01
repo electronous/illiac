@@ -30,78 +30,78 @@ class ByteWriter
 end
 
 def abs_short
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b10010100
-	new_op.flag   = 1
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b10010100
+	new_inst.flag   = 1
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def abs_long
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b10010101
-	new_op.flag   = 1
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b10010101
+	new_inst.flag   = 1
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def dupb
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00100100
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00100100
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def duphw
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00100101
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00100101
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def dupw
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00100110
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00100110
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def sluffb
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00100000
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00100000
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def sluffhw
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00100001
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00100001
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def sluffw
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00100001
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00100001
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def xchb
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00101000
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00101000
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def xchhw
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00101001
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00101001
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
 
 def xchw
-	new_op = ZeroOperandInst.new
-	new_op.opcode = 0b00101001
-	new_op.flag   = 0
-	ByteWriter.instance.add_instruction(new_op)
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00101001
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
 end
