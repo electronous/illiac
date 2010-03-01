@@ -686,6 +686,18 @@ void execute(byte_t opcode, cpu_t *cpu)
 				sluff_word(cpu);
 				new_pointer_value = (uint16_t)(old_pointer_value + 1);
 				break;
+			case b(00101000):
+				xch_byte(cpu);
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				break;
+			case b(00101001):
+				xch_halfword(cpu);
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				break;
+			case b(00101010):
+				xch_word(cpu);
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				break;
 			default:
 				hcf(cpu, opcode);
 				break;

@@ -84,3 +84,24 @@ def sluffw
 	new_op.flag   = 0
 	ByteWriter.instance.add_instruction(new_op)
 end
+
+def xchb
+	new_op = ZeroOperandInst.new
+	new_op.opcode = 0b00101000
+	new_op.flag   = 0
+	ByteWriter.instance.add_instruction(new_op)
+end
+
+def xchhw
+	new_op = ZeroOperandInst.new
+	new_op.opcode = 0b00101001
+	new_op.flag   = 0
+	ByteWriter.instance.add_instruction(new_op)
+end
+
+def xchw
+	new_op = ZeroOperandInst.new
+	new_op.opcode = 0b00101001
+	new_op.flag   = 0
+	ByteWriter.instance.add_instruction(new_op)
+end
