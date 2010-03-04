@@ -639,7 +639,7 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	{
 		byte_t byte = pop_operand_byte(cpu);
 		printf("\tvalue: %hhX\n", get_data_from_byte(byte));
-		printf("\t\tflag: %hhX\n", get_flag_from_byte(byte));
+		printf("\t\tflag: %d\n", get_flag_from_byte(byte));
 	}
 	printf("\n");
 	free(core_memory);
