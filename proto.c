@@ -607,9 +607,16 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	exit(EXIT_FAILURE);
 }
 
-void execute(byte_t opcode, cpu_t *cpu)
+uint16_t increment_ip(cpu_t *cpu, uint16_t increment)
 {
 	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[0].pointer_value);
+	uint16_t new_pointer_value = (uint16_t)(old_pointer_value + increment);
+	assert(new_pointer_value > old_pointer_value);
+	return new_pointer_value;
+}
+
+void execute(byte_t opcode, cpu_t *cpu)
+{
 	uint16_t new_pointer_value = 0;
 
 	if (get_flag_from_byte(opcode))
@@ -618,11 +625,11 @@ void execute(byte_t opcode, cpu_t *cpu)
 		{
 			case b(10010100):
 				abs_short(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(10010101):
 				abs_long(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			default:
 				hcf(cpu, opcode);
@@ -635,43 +642,43 @@ void execute(byte_t opcode, cpu_t *cpu)
 		{
 			case b(00000100):
 				one_byte(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00100100):
 				dup_byte(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00100101):
 				dup_halfword(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00100110):
 				dup_word(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00100000):
 				sluff_byte(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00100001):
 				sluff_halfword(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00100010):
 				sluff_word(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00101000):
 				xch_byte(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00101001):
 				xch_halfword(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			case b(00101010):
 				xch_word(cpu);
-				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				new_pointer_value = increment_ip(cpu, 1);
 				break;
 			default:
 				hcf(cpu, opcode);

@@ -162,6 +162,8 @@ void xch_word(cpu_t *cpu);
 
 void hcf(cpu_t *cpu, byte_t opcode);
 
+uint16_t increment_ip(cpu_t *cpu, uint16_t increment);
+
 void execute(byte_t opcode, cpu_t *cpu);
 
 void cpu_ctor(cpu_t *cpu);
