@@ -733,6 +733,12 @@ int main(int argc, char *argv[])
 {
 	cpu_t cpu;
 
+	if (argc != 2)
+	{
+		printf("%s objfile\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
 	cpu_ctor(&cpu);
 	core_memory = (byte_t *)malloc(sizeof(byte_t [NUM_BYTES]));
 	if (core_memory == NULL)
@@ -741,32 +747,35 @@ int main(int argc, char *argv[])
 		exit(EXIT_FAILURE);
 	}
 
-	if (argc == 2)
-	{
-		raw_address_t addr = 0;
-		FILE *fp = fopen(argv[1], "rb");
-		if (fp == NULL)
-		{
-			perror("Could not open objfile");
-			exit(EXIT_FAILURE);
-		}
+	raw_address_t addr = 0;
 
-		while (!feof(fp))
-		{
-			byte_t byte;
-			if (fread(&byte, sizeof(byte), 1, fp) == 1)
-			{
-				put_byte_into_memory(byte, addr);
-				addr += 1;
-			}
-		}
-		fclose(fp);
-	}
-	else
+	FILE *fp = fopen(argv[1], "rb");
+	if (fp == NULL)
 	{
-		printf("%s objfile\n", argv[0]);
+		perror("Could not open objfile");
 		exit(EXIT_FAILURE);
 	}
+
+	while (!feof(fp))
+	{
+		byte_t byte;
+		if (fread(&byte, sizeof(byte), 1, fp) == 1)
+		{
+			put_byte_into_memory(byte, addr);
+			addr += 1;
+		}
+		else if (ferror(fp))
+		{
+			perror("Bad file read");
+			exit(EXIT_FAILURE);
+		}
+		else
+		{
+			break;
+		}
+	}
+
+	fclose(fp);
 
 	for (;;)
 	{
