@@ -559,7 +559,7 @@ void abs_long(cpu_t *cpu)
 	push_operand_word(new_stack_value, cpu);
 }
 
-void hcf(cpu_t *cpu, byte_t opcode)
+void hcf(byte_t opcode, cpu_t *cpu)
 {
 	size_t i;
 	uint16_t temp16;
@@ -613,16 +613,27 @@ void hcf(cpu_t *cpu, byte_t opcode)
 		printf("\t\tflag: %d\n", get_flag_from_byte(byte));
 	}
 	printf("\n");
-	free(core_memory);
+	core_memory_dtor();
 	exit(EXIT_FAILURE);
 }
 
-uint16_t increment_ip(cpu_t *cpu, uint16_t increment)
+uint16_t increment_ip(uint16_t increment, const cpu_t *cpu)
 {
 	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[0].pointer_value);
 	uint16_t new_pointer_value = (uint16_t)(old_pointer_value + increment);
 	assert(new_pointer_value > old_pointer_value);
 	return new_pointer_value;
+}
+
+void instruction_fetch_loop(cpu_t *cpu)
+{
+	for (;;)
+	{
+		raw_address_t instruction = get_address_from_pointer(&(cpu->pr[0]), cpu);
+
+		byte_t opcode = get_byte_from_memory(instruction);
+		execute(opcode, cpu);
+	}
 }
 
 void execute(byte_t opcode, cpu_t *cpu)
@@ -635,14 +646,14 @@ void execute(byte_t opcode, cpu_t *cpu)
 		{
 			case b(10010100):
 				abs_short(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(10010101):
 				abs_long(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			default:
-				hcf(cpu, opcode);
+				hcf(opcode, cpu);
 				break;
 		}
 	}
@@ -652,46 +663,46 @@ void execute(byte_t opcode, cpu_t *cpu)
 		{
 			case b(00000100):
 				one_byte(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00100100):
 				dup_byte(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00100101):
 				dup_halfword(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00100110):
 				dup_word(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00100000):
 				sluff_byte(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00100001):
 				sluff_halfword(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00100010):
 				sluff_word(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00101000):
 				xch_byte(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00101001):
 				xch_halfword(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case b(00101010):
 				xch_word(cpu);
-				new_pointer_value = increment_ip(cpu, 1);
+				new_pointer_value = increment_ip(1, cpu);
 				break;
 			default:
-				hcf(cpu, opcode);
+				hcf(opcode, cpu);
 				break;
 		}
 	}
@@ -707,27 +718,26 @@ void cpu_ctor(cpu_t *cpu)
 	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
 }
 
-int main(int argc, const char *argv[])
+void core_memory_ctor()
 {
-	cpu_t cpu;
-
-	if (argc != 2)
-	{
-		printf("%s objfile\n", argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
-	cpu_ctor(&cpu);
 	core_memory = (byte_t *)malloc(sizeof(byte_t [NUM_BYTES]));
 	if (core_memory == NULL)
 	{
 		perror("error allocating core_memory");
 		exit(EXIT_FAILURE);
 	}
+}
 
+void core_memory_dtor()
+{
+	free(core_memory);
+}
+
+void load_object_file(const char *objfile)
+{
 	raw_address_t addr = 0;
 
-	FILE *fp = fopen(argv[1], "rb");
+	FILE *fp = fopen(objfile, "rb");
 	if (fp == NULL)
 	{
 		perror("Could not open objfile");
@@ -758,14 +768,28 @@ int main(int argc, const char *argv[])
 		perror("Error closing file handle");
 		exit(EXIT_FAILURE);
 	}
+}
 
-	for (;;)
+int main(int argc, const char *argv[])
+{
+	const char *objfile;
+	cpu_t cpu;
+
+	objfile = argv[1];
+
+	if (objfile == NULL || argc != 2)
 	{
-		raw_address_t instruction = get_address_from_pointer(&(cpu.pr[0]), &cpu);
-
-		byte_t opcode = get_byte_from_memory(instruction);
-		execute(opcode, &cpu);
+		printf("%s objfile\n", argv[0]);
+		exit(EXIT_FAILURE);
 	}
-	free(core_memory);
+
+	cpu_ctor(&cpu);
+	core_memory_ctor();
+
+	load_object_file(objfile);
+
+	instruction_fetch_loop(&cpu);
+
+	core_memory_dtor();
 	return EXIT_SUCCESS;
 }

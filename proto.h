@@ -160,10 +160,18 @@ void xch_halfword(cpu_t *cpu);
 
 void xch_word(cpu_t *cpu);
 
-void hcf(cpu_t *cpu, byte_t opcode);
+void hcf(byte_t opcode, cpu_t *cpu);
 
-uint16_t increment_ip(cpu_t *cpu, uint16_t increment);
+uint16_t increment_ip(uint16_t increment, const cpu_t *cpu);
+
+void instruction_fetch_loop(cpu_t *cpu);
 
 void execute(byte_t opcode, cpu_t *cpu);
 
 void cpu_ctor(cpu_t *cpu);
+
+void core_memory_ctor();
+
+void core_memory_dtor();
+
+void load_object_file(const char *objfile);
