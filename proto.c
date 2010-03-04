@@ -43,6 +43,8 @@ raw_address_t get_address_from_link(const number_format_t *p, const cpu_t *cpu)
 
 number_format_t get_pointer_register_from_memory(raw_address_t addr)
 {
+	assert(addr + 2 > addr);
+
 	number_format_t ret = {
 		.pointer_link  = get_halfword_from_memory(addr),
 		.pointer_value = get_halfword_from_memory(addr + 2)
@@ -59,6 +61,8 @@ byte_t get_byte_from_memory(raw_address_t addr)
 
 halfword_t get_halfword_from_memory(raw_address_t addr)
 {
+	assert(addr + 1 > addr);
+
 	halfword_t halfword = {
 		.high = get_byte_from_memory(addr),
 		.low  = get_byte_from_memory(addr + 1)
@@ -68,6 +72,8 @@ halfword_t get_halfword_from_memory(raw_address_t addr)
 
 word_t get_word_from_memory(raw_address_t addr)
 {
+	assert(addr + 2 > addr);
+
 	word_t word = {
 		.high = get_halfword_from_memory(addr),
 		.low  = get_halfword_from_memory(addr + 2),
@@ -83,12 +89,16 @@ void put_byte_into_memory(byte_t arg, raw_address_t addr)
 
 void put_halfword_into_memory(halfword_t arg, raw_address_t addr)
 {
+	assert(addr + 1 > addr);
+
 	put_byte_into_memory(arg.high, addr);
 	put_byte_into_memory(arg.low,  addr + 1);
 }
 
 void put_word_into_memory(word_t arg, raw_address_t addr)
 {
+	assert(addr + 2 > addr);
+
 	put_halfword_into_memory(arg.high, addr);
 	put_halfword_into_memory(arg.low,  addr + 2);
 }
