@@ -29,14 +29,14 @@ class ByteWriter
 	end
 end
 
-def abs_short
+def abss
 	new_inst = ZeroOperandInst.new
 	new_inst.opcode = 0b10010100
 	new_inst.flag   = 1
 	ByteWriter.instance.add_instruction(new_inst)
 end
 
-def abs_long
+def absl
 	new_inst = ZeroOperandInst.new
 	new_inst.opcode = 0b10010101
 	new_inst.flag   = 1
@@ -102,6 +102,20 @@ end
 def xchw
 	new_inst = ZeroOperandInst.new
 	new_inst.opcode = 0b00101001
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
+end
+
+def oneb
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b00000100
+	new_inst.flag   = 0
+	ByteWriter.instance.add_instruction(new_inst)
+end
+
+def hcf
+	new_inst = ZeroOperandInst.new
+	new_inst.opcode = 0b11111111
 	new_inst.flag   = 0
 	ByteWriter.instance.add_instruction(new_inst)
 end

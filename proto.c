@@ -413,6 +413,16 @@ void dup_word(cpu_t *cpu)
 	push_operand_word(operand, cpu);
 }
 
+void one_byte(cpu_t *cpu)
+{
+	byte_t operand;
+	pop_operand_byte(cpu);
+
+	operand.data = b(11111111);
+	operand.flag = true;
+	push_operand_byte(operand, cpu);
+}
+
 void sluff_byte(cpu_t *cpu)
 {
 	pop_operand_byte(cpu);
@@ -625,12 +635,12 @@ void hcf(cpu_t *cpu, byte_t opcode)
 	printf("\tFree List Link: %hX\n\n", temp16);
 
 	printf("Stack values (top to bottom)\n");
-	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
-	printf("\t%hhX\n", get_data_from_byte(pop_operand_byte(cpu)));
+	for (i = 0; i < 6; i++)
+	{
+		byte_t byte = pop_operand_byte(cpu);
+		printf("\tvalue: %hhX\n", get_data_from_byte(byte));
+		printf("\t\tflag: %hhX\n", get_flag_from_byte(byte));
+	}
 	printf("\n");
 	free(core_memory);
 	exit(EXIT_FAILURE);
@@ -662,6 +672,10 @@ void execute(byte_t opcode, cpu_t *cpu)
 	{
 		switch (opcode.data)
 		{
+			case b(00000100):
+				one_byte(cpu);
+				new_pointer_value = (uint16_t)(old_pointer_value + 1);
+				break;
 			case b(00100100):
 				dup_byte(cpu);
 				new_pointer_value = (uint16_t)(old_pointer_value + 1);
@@ -707,67 +721,15 @@ void execute(byte_t opcode, cpu_t *cpu)
 	cpu->pr[0].pointer_value = put_data_into_halfword(new_pointer_value);
 }
 
-static
-void load_basic_program_1(cpu_t *cpu)
-{
-	/* Program 1 does the following
-				* Load abs_long into 0x0
-				* Set pointer link of pr[0] to 0x100
-				* Put PR contents into 0x100 with pointer value = 0x1
-				* Put HCF into 0x1
-				* Set Stack pointer (pr[13]) to 0x1000
-				* Load Stack contents
-	*/
-	raw_address_t addr;
-	byte_t opcode;
-	halfword_t pointer_link_0;
-	halfword_t pointer_link_1;
-	halfword_t pointer_value;
-	nf_t next_instruction_pr;
-	
-	/* Set pr[13] to 0x1000 */
-	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
-	
-	/* Put abs_long into 0x0 */
-	addr = get_address_from_pointer(&(cpu->pr[0]), cpu);
-	opcode = put_data_into_byte(b(10010101));
-	//opcode = put_data_into_byte(0);
-	set_flag_byte(&opcode);
-	put_byte_into_memory(opcode, addr);
-
-	/* Set pointer link of pr[0] */
-	pointer_link_0 = put_data_into_halfword(0x100);
-	cpu->pr[0].pointer_link = pointer_link_0;
-	
-	/* Put PR into 0x100 with pointer value 0x1 */
-	pointer_link_1 = put_data_into_halfword(0x104);
-	/* Note that there's nothing actually at 0x104, but that's
-					ok because of the fetch decode execute order */
-	pointer_value = put_data_into_halfword(1);
-	/* 0x1 -- pointer to an HCF instruction */
-	addr = get_address_from_link(&(cpu->pr[0]), cpu);
-	put_halfword_into_memory(pointer_link_1, addr);
-	put_halfword_into_memory(pointer_value, addr + 2);
-
-	/* Put HCF into 0x1 */
-	opcode = put_data_into_byte(0);
-	next_instruction_pr.pointer_value = pointer_value;
-	next_instruction_pr.pointer_link = put_data_into_halfword(0);
-	addr = get_address_from_pointer(&next_instruction_pr, cpu);
-	put_byte_into_memory(opcode, addr);
-
-	/*  Finally, load a thing into the stack. */
-	/* We will put in '5' */
-	addr = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	push_operand_word(put_data_into_word(-5), cpu);
-}
-
 void cpu_ctor(cpu_t *cpu)
 {
 	memset(cpu, 0, sizeof(*cpu));
+
+	/* Set pr[13] to 0x1000 */
+	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
 }
 
-int main(void)
+int main(int argc, char *argv[])
 {
 	cpu_t cpu;
 
@@ -778,7 +740,23 @@ int main(void)
 		perror("error allocating core_memory");
 		exit(EXIT_FAILURE);
 	}
-	load_basic_program_1(&cpu);
+
+	if (argc == 2)
+	{
+		raw_address_t addr = 0;
+		FILE *fp = fopen(argv[1], "rb");
+		while (!feof(fp))
+		{
+			byte_t byte;
+			if (fread(&byte, sizeof(byte), 1, fp))
+			{
+				put_byte_into_memory(byte, addr);
+				addr += 1;
+			}
+		}
+		fclose(fp);
+	}
+
 	for (;;)
 	{
 		raw_address_t instruction = get_address_from_pointer(&(cpu.pr[0]), &cpu);
