@@ -447,8 +447,8 @@ void add_short(cpu_t *cpu)
 
 	operand1 = pop_operand_halfword(cpu);
 	operand2 = pop_operand_halfword(cpu);
-	data1 = get_data_from_halfword(operand1);
-	data2 = get_data_from_halfword(operand2);
+	data1 = (int16_t)get_data_from_halfword(operand1);
+	data2 = (int16_t)get_data_from_halfword(operand2);
 
 	result = (int16_t)(data1 + data2);
 
@@ -463,7 +463,7 @@ void add_short(cpu_t *cpu)
 		has_overflowed = true;
 	}
 
-	new_stack_value = put_data_into_halfword(result);
+	new_stack_value = put_data_into_halfword((uint16_t)result);
 	copy_halfword_flags(&operand2, &new_stack_value);
 
 	if (has_overflowed)
@@ -482,10 +482,10 @@ void add_long(cpu_t *cpu)
 
 	operand1 = pop_operand_word(cpu);
 	operand2 = pop_operand_word(cpu);
-	data1 = get_data_from_word(operand1);
-	data2 = get_data_from_word(operand2);
+	data1 = (int32_t)get_data_from_word(operand1);
+	data2 = (int32_t)get_data_from_word(operand2);
 
-	result = (uint32_t)(data1 + data2);
+	result = (int32_t)(data1 + data2);
 
 	has_overflowed = false;
 	if (data1 >= 0 && result < data2)
@@ -498,7 +498,7 @@ void add_long(cpu_t *cpu)
 		has_overflowed = true;
 	}
 
-	new_stack_value = put_data_into_word(result);
+	new_stack_value = put_data_into_word((uint32_t)result);
 	copy_word_flags(&operand2, &new_stack_value);
 
 	if (has_overflowed)
