@@ -282,12 +282,15 @@ byte_t pop_operand_byte(cpu_t *cpu)
 {
 	halfword_t halfword;
 	raw_address_t operand_pointer;
-	uint16_t data;
+	uint16_t old_addr, new_addr;
 
-	data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data = (uint16_t)(data - 1);
+	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
 
-	halfword = put_data_into_halfword(data);
+	assert(old_addr >= 1);
+
+	new_addr = (uint16_t)(old_addr - 1);
+
+	halfword = put_data_into_halfword(new_addr);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -300,12 +303,15 @@ halfword_t pop_operand_halfword(cpu_t *cpu)
 {
 	halfword_t halfword;
 	raw_address_t operand_pointer;
-	uint16_t data;
+	uint16_t old_addr, new_addr;
 
-	data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data = (uint16_t)(data - 2);
+	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
 
-	halfword = put_data_into_halfword(data);
+	assert(old_addr >= 2);
+
+	new_addr = (uint16_t)(old_addr - 2);
+
+	halfword = put_data_into_halfword(new_addr);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -318,12 +324,15 @@ word_t pop_operand_word(cpu_t *cpu)
 {
 	halfword_t halfword;
 	raw_address_t operand_pointer;
-	uint16_t data;
+	uint16_t old_addr, new_addr;
 
-	data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data = (uint16_t)(data - 4);
+	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
 
-	halfword = put_data_into_halfword(data);
+	assert(old_addr >= 4);
+
+	new_addr = (uint16_t)(old_addr - 4);
+
+	halfword = put_data_into_halfword(new_addr);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -336,13 +345,15 @@ void push_operand_byte(byte_t arg, cpu_t *cpu)
 {
 	halfword_t halfword;
 	raw_address_t operand_pointer;
-	uint16_t data;
+	uint16_t old_addr, new_addr;
 
 	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data = (uint16_t)(data + 1);
+	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
+	new_addr = (uint16_t)(old_addr + 1);
 
-	halfword = put_data_into_halfword(data);
+	assert(new_addr > old_addr);
+
+	halfword = put_data_into_halfword(new_addr);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -354,13 +365,15 @@ void push_operand_halfword(halfword_t arg, cpu_t *cpu)
 {
 	halfword_t halfword;
 	raw_address_t operand_pointer;
-	uint16_t data;
+	uint16_t old_addr, new_addr;
 
 	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data = (uint16_t)(data + 2);
+	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
+	new_addr = (uint16_t)(old_addr + 2);
 
-	halfword = put_data_into_halfword(data);
+	assert(new_addr > old_addr);
+
+	halfword = put_data_into_halfword(new_addr);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
@@ -372,13 +385,15 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 {
 	halfword_t halfword;
 	raw_address_t operand_pointer;
-	uint16_t data;
+	uint16_t old_addr, new_addr;
 
 	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
-	data = get_data_from_halfword(cpu->pr[13].pointer_value);
-	data = (uint16_t)(data + 4);
+	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
+	new_addr = (uint16_t)(old_addr + 4);
 
-	halfword = put_data_into_halfword(data);
+	assert(new_addr > old_addr);
+
+	halfword = put_data_into_halfword(new_addr);
 	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
 
 	cpu->pr[13].pointer_value = halfword;
