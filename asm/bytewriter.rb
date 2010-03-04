@@ -6,6 +6,8 @@ class ZeroOperandInst < BinData::Record
 	endian :little
 
 	uint8 :opcode
+
+	bit7
 	bit1  :flag
 end
 

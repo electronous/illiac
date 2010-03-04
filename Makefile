@@ -1,4 +1,4 @@
-CC=icc
+CC=gcc
 CFLAGS=-std=c99 -pedantic -Wall -Wextra -g
 
 all: proto

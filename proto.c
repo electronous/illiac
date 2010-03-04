@@ -745,10 +745,16 @@ int main(int argc, char *argv[])
 	{
 		raw_address_t addr = 0;
 		FILE *fp = fopen(argv[1], "rb");
+		if (fp == NULL)
+		{
+			perror("Could not open objfile\n");
+			exit(EXIT_FAILURE);
+		}
+
 		while (!feof(fp))
 		{
 			byte_t byte;
-			if (fread(&byte, sizeof(byte), 1, fp))
+			if (fread(&byte, sizeof(byte), 1, fp) == 1)
 			{
 				put_byte_into_memory(byte, addr);
 				addr += 1;
