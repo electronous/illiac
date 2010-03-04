@@ -718,7 +718,7 @@ void cpu_ctor(cpu_t *cpu)
 	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
 }
 
-void core_memory_ctor()
+void core_memory_ctor(void)
 {
 	core_memory = (byte_t *)malloc(sizeof(byte_t [NUM_BYTES]));
 	if (core_memory == NULL)
@@ -728,7 +728,7 @@ void core_memory_ctor()
 	}
 }
 
-void core_memory_dtor()
+void core_memory_dtor(void)
 {
 	free(core_memory);
 }

@@ -170,8 +170,8 @@ void execute(byte_t opcode, cpu_t *cpu);
 
 void cpu_ctor(cpu_t *cpu);
 
-void core_memory_ctor();
+void core_memory_ctor(void);
 
-void core_memory_dtor();
+void core_memory_dtor(void);
 
 void load_object_file(const char *objfile);
