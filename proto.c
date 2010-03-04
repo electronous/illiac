@@ -747,7 +747,7 @@ int main(int argc, char *argv[])
 		FILE *fp = fopen(argv[1], "rb");
 		if (fp == NULL)
 		{
-			perror("Could not open objfile\n");
+			perror("Could not open objfile");
 			exit(EXIT_FAILURE);
 		}
 
