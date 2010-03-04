@@ -644,11 +644,11 @@ void execute(byte_t opcode, cpu_t *cpu)
 	{
 		switch (opcode.data)
 		{
-			case b(10010100):
+			case ABS_SHORT:
 				abs_short(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(10010101):
+			case ABS_LONG:
 				abs_long(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
@@ -661,43 +661,43 @@ void execute(byte_t opcode, cpu_t *cpu)
 	{
 		switch (opcode.data)
 		{
-			case b(00000100):
+			case ONE_BYTE:
 				one_byte(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00100100):
+			case DUP_BYTE:
 				dup_byte(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00100101):
+			case DUP_HALFWORD:
 				dup_halfword(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00100110):
+			case DUP_WORD:
 				dup_word(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00100000):
+			case SLUFF_BYTE:
 				sluff_byte(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00100001):
+			case SLUFF_HALFWORD:
 				sluff_halfword(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00100010):
+			case SLUFF_WORD:
 				sluff_word(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00101000):
+			case XCH_BYTE:
 				xch_byte(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00101001):
+			case XCH_HALFWORD:
 				xch_halfword(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-			case b(00101010):
+			case XCH_WORD:
 				xch_word(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;

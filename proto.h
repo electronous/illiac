@@ -58,6 +58,32 @@ typedef struct
 	asf_t pr_14;
 } cpu_t;
 
+typedef enum
+{
+	ABS_SHORT  = b(10010100),
+	ABS_LONG
+} flaged_opcode_t;
+
+typedef enum
+{
+	ONE_BYTE   = b(00000100),
+	ONE_HALFWORD,
+	ONE_WORD,
+	ONE_DOUBLEWORD,
+	DUP_BYTE   = b(00100100),
+	DUP_HALFWORD,
+	DUP_WORD,
+	DUP_DOUBLEWORD,
+	SLUFF_BYTE = b(00100000),
+	SLUFF_HALFWORD,
+	SLUFF_WORD,
+	SLUFF_DOUBLEWORD,
+	XCH_BYTE   = b(00101000),
+	XCH_HALFWORD,
+	XCH_WORD,
+	XCH_DOUBLWORD
+} flagless_opcode_t;
+
 raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu);
 
 raw_address_t get_address_from_pointer(const number_format_t *p, const cpu_t *cpu);
