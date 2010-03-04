@@ -690,7 +690,7 @@ void cpu_ctor(cpu_t *cpu)
 	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
 }
 
-int main(int argc, char *argv[])
+int main(int argc, const char *argv[])
 {
 	cpu_t cpu;
 
