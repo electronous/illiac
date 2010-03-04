@@ -756,6 +756,11 @@ int main(int argc, char *argv[])
 		}
 		fclose(fp);
 	}
+	else
+	{
+		printf("%s objfile\n", argv[0]);
+		exit(EXIT_FAILURE);
+	}
 
 	for (;;)
 	{
