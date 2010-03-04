@@ -753,7 +753,11 @@ int main(int argc, const char *argv[])
 		}
 	}
 
-	fclose(fp);
+	if (fclose(fp))
+	{
+		perror("Error closing file handle");
+		exit(EXIT_FAILURE);
+	}
 
 	for (;;)
 	{
