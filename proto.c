@@ -617,97 +617,71 @@ void hcf(byte_t opcode, cpu_t *cpu)
 	exit(EXIT_FAILURE);
 }
 
-uint16_t increment_ip(uint16_t increment, const cpu_t *cpu)
+operand_table_t opcodes[512] = {
+	[ABS_SHORT     | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_short},
+	[ABS_LONG      | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_long},
+
+	[ONE_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = one_byte},
+	[DUP_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_byte},
+	[DUP_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_halfword},
+	[DUP_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_word},
+
+	[SLUFF_BYTE    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_byte},
+	[SLUFF_HALFWORD| FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_halfword},
+	[SLUFF_WORD    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_word},
+
+	[XCH_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_byte},
+	[XCH_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_halfword},
+	[XCH_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_word}
+};
+
+void pre_execute(num_operands_t num_operands, cpu_t *cpu)
 {
-	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[0].pointer_value);
-	uint16_t new_pointer_value = (uint16_t)(old_pointer_value + increment);
-	assert(new_pointer_value > old_pointer_value);
-	return new_pointer_value;
+}
+
+void post_execute(num_operands_t num_operands, cpu_t *cpu)
+{
+}
+
+size_t decode_byte_t(byte_t byte)
+{
+	return (byte.data) | (byte.flag << 8);
 }
 
 void instruction_fetch_loop(cpu_t *cpu)
 {
 	for (;;)
 	{
-		raw_address_t instruction = get_address_from_pointer(&(cpu->pr[0]), cpu);
+		raw_address_t instruction  = get_address_from_pointer(&(cpu->pr[0]), cpu);
+		uint16_t new_pointer_value = 0;
+		byte_t opcode              = get_byte_from_memory(instruction);
 
-		byte_t opcode = get_byte_from_memory(instruction);
-		execute(opcode, cpu);
+		operand_table_t decoded_opcode = opcodes[decode_byte_t(opcode)];
+
+		switch (decoded_opcode.num_operands)
+		{
+			case ZERO_OPS:
+				decoded_opcode.opcode_impl.zero_args(cpu);
+				new_pointer_value = increment_ip(1, cpu);
+				break;
+/*			case ONE_OPS:
+				uint16_t first_operand = get_address_from_poin
+				decoded_opcode.opcode_impl.one_args(sdfds, cpu);
+				break;*/
+			default:
+				hcf(opcode, cpu);
+		}
+
+		cpu->pr[0].pointer_value = put_data_into_halfword(new_pointer_value);
 	}
 }
 
-void execute(byte_t opcode, cpu_t *cpu)
+uint16_t increment_ip(uint16_t increment, const cpu_t *cpu)
 {
-	uint16_t new_pointer_value = 0;
-
-	if (get_flag_from_byte(opcode))
-	{
-		switch (opcode.data)
-		{
-			case ABS_SHORT:
-				abs_short(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case ABS_LONG:
-				abs_long(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			default:
-				hcf(opcode, cpu);
-				break;
-		}
-	}
-	else
-	{
-		switch (opcode.data)
-		{
-			case ONE_BYTE:
-				one_byte(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case DUP_BYTE:
-				dup_byte(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case DUP_HALFWORD:
-				dup_halfword(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case DUP_WORD:
-				dup_word(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case SLUFF_BYTE:
-				sluff_byte(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case SLUFF_HALFWORD:
-				sluff_halfword(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case SLUFF_WORD:
-				sluff_word(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case XCH_BYTE:
-				xch_byte(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case XCH_HALFWORD:
-				xch_halfword(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			case XCH_WORD:
-				xch_word(cpu);
-				new_pointer_value = increment_ip(1, cpu);
-				break;
-			default:
-				hcf(opcode, cpu);
-				break;
-		}
-	}
-
-	cpu->pr[0].pointer_value = put_data_into_halfword(new_pointer_value);
+	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[0].pointer_value);
+	uint16_t new_pointer_value = (uint16_t)(old_pointer_value + increment);
+	assert(new_pointer_value > old_pointer_value);
+	return new_pointer_value;
 }
 
 void cpu_ctor(cpu_t *cpu)

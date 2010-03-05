@@ -58,6 +58,42 @@ typedef struct
 	asf_t pr_14;
 } cpu_t;
 
+/*typedef struct
+{
+	uint8_t  tag        : 4;
+	bool     slash_push : 1;
+	bool     slash_pop  : 1;
+	bool     indirected : 1;
+	bool     last       : 1;
+	bool     flag;
+} operand_t;*/
+
+typedef enum
+{
+	INVALID_OPS,
+	ZERO_OPS,
+	ONE_OPS,
+	TWO_OPS,
+	MANY_OPS
+} num_operands_t;
+
+
+typedef union
+{
+	void (*zero_args)(cpu_t *);
+	void (*one_args)(size_t operand_reg, cpu_t *);
+	void (*two_args)(size_t operand_reg_1, size_t operand_reg_2, cpu_t *);
+} opcode_impl_t;
+
+typedef struct
+{
+	num_operands_t num_operands;
+	opcode_impl_t opcode_impl;
+} operand_table_t;
+
+#define FLAGLESS (0 << 8)
+#define FLAGED   (1 << 8)
+
 typedef enum
 {
 	ABS_SHORT  = b(10010100),
@@ -188,11 +224,9 @@ void xch_word(cpu_t *cpu);
 
 void hcf(byte_t opcode, cpu_t *cpu);
 
-uint16_t increment_ip(uint16_t increment, const cpu_t *cpu);
-
 void instruction_fetch_loop(cpu_t *cpu);
 
-void execute(byte_t opcode, cpu_t *cpu);
+uint16_t increment_ip(uint16_t increment, const cpu_t *cpu);
 
 void cpu_ctor(cpu_t *cpu);
 
