@@ -357,86 +357,54 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 	push_operand_halfword(arg.low,  cpu);
 }
 
-void dup_byte(cpu_t *cpu)
+void abs_short(cpu_t *cpu)
 {
-	byte_t operand;
-
-	operand = pop_operand_byte(cpu);
-	push_operand_byte(operand, cpu);
-	push_operand_byte(operand, cpu);
-}
-
-void dup_halfword(cpu_t *cpu)
-{
-	halfword_t operand;
+	halfword_t operand, new_stack_value;
+	uint16_t abs_data;
+	bool has_overflowed;
 
 	operand = pop_operand_halfword(cpu);
-	push_operand_halfword(operand, cpu);
-	push_operand_halfword(operand, cpu);
+	abs_data = get_data_from_halfword(operand);
+	if (abs_data >> 15)
+	{
+		abs_data = (uint16_t)(~abs_data + 1);
+	}
+
+	new_stack_value = put_data_into_halfword(abs_data);
+	copy_halfword_flags(&operand, &new_stack_value);
+
+	has_overflowed = abs_data >> 15;
+	if (has_overflowed)
+	{
+		set_flag_halfword(&new_stack_value, 0);
+	}
+
+	push_operand_halfword(new_stack_value, cpu);
 }
 
-void dup_word(cpu_t *cpu)
+void abs_long(cpu_t *cpu)
 {
-	word_t operand;
+	word_t operand, new_stack_value;
+	uint32_t abs_data;
+	bool has_overflowed;
 
 	operand = pop_operand_word(cpu);
-	push_operand_word(operand, cpu);
-	push_operand_word(operand, cpu);
-}
+	abs_data = get_data_from_word(operand);
+	if (abs_data >> 31)
+	{
+		abs_data = ~abs_data + 1;
+	}
 
-void one_byte(cpu_t *cpu)
-{
-	byte_t operand;
-	pop_operand_byte(cpu);
+	new_stack_value = put_data_into_word(abs_data);
+	copy_word_flags(&operand, &new_stack_value);
 
-	operand.data = b(11111111);
-	operand.flag = true;
-	push_operand_byte(operand, cpu);
-}
+	has_overflowed = abs_data >> 31;
+	if (has_overflowed)
+	{
+		set_flag_word(&new_stack_value, 0);
+	}
 
-void sluff_byte(cpu_t *cpu)
-{
-	pop_operand_byte(cpu);
-}
-
-void sluff_halfword(cpu_t *cpu)
-{
-	pop_operand_halfword(cpu);
-}
-
-void sluff_word(cpu_t *cpu)
-{
-	pop_operand_word(cpu);
-}
-
-void xch_byte(cpu_t *cpu)
-{
-	byte_t operand1, operand2;
-
-	operand1 = pop_operand_byte(cpu);
-	operand2 = pop_operand_byte(cpu);
-	push_operand_byte(operand1, cpu);
-	push_operand_byte(operand2, cpu);
-}
-
-void xch_halfword(cpu_t *cpu)
-{
-	halfword_t operand1, operand2;
-
-	operand1 = pop_operand_halfword(cpu);
-	operand2 = pop_operand_halfword(cpu);
-	push_operand_halfword(operand1, cpu);
-	push_operand_halfword(operand2, cpu);
-}
-
-void xch_word(cpu_t *cpu)
-{
-	word_t operand1, operand2;
-
-	operand1 = pop_operand_word(cpu);
-	operand2 = pop_operand_word(cpu);
-	push_operand_word(operand1, cpu);
-	push_operand_word(operand2, cpu);
+	push_operand_word(new_stack_value, cpu);
 }
 
 void add_short(cpu_t *cpu)
@@ -509,54 +477,86 @@ void add_long(cpu_t *cpu)
 	push_operand_word(new_stack_value, cpu);
 }
 
-void abs_short(cpu_t *cpu)
+void one_byte(cpu_t *cpu)
 {
-	halfword_t operand, new_stack_value;
-	uint16_t abs_data;
-	bool has_overflowed;
+	byte_t operand;
+	pop_operand_byte(cpu);
 
-	operand = pop_operand_halfword(cpu);
-	abs_data = get_data_from_halfword(operand);
-	if (abs_data >> 15)
-	{
-		abs_data = (uint16_t)(~abs_data + 1);
-	}
-
-	new_stack_value = put_data_into_halfword(abs_data);
-	copy_halfword_flags(&operand, &new_stack_value);
-
-	has_overflowed = abs_data >> 15;
-	if (has_overflowed)
-	{
-		set_flag_halfword(&new_stack_value, 0);
-	}
-
-	push_operand_halfword(new_stack_value, cpu);
+	operand.data = b(11111111);
+	operand.flag = true;
+	push_operand_byte(operand, cpu);
 }
 
-void abs_long(cpu_t *cpu)
+void dup_byte(cpu_t *cpu)
 {
-	word_t operand, new_stack_value;
-	uint32_t abs_data;
-	bool has_overflowed;
+	byte_t operand;
+
+	operand = pop_operand_byte(cpu);
+	push_operand_byte(operand, cpu);
+	push_operand_byte(operand, cpu);
+}
+
+void dup_halfword(cpu_t *cpu)
+{
+	halfword_t operand;
+
+	operand = pop_operand_halfword(cpu);
+	push_operand_halfword(operand, cpu);
+	push_operand_halfword(operand, cpu);
+}
+
+void dup_word(cpu_t *cpu)
+{
+	word_t operand;
 
 	operand = pop_operand_word(cpu);
-	abs_data = get_data_from_word(operand);
-	if (abs_data >> 31)
-	{
-		abs_data = ~abs_data + 1;
-	}
+	push_operand_word(operand, cpu);
+	push_operand_word(operand, cpu);
+}
 
-	new_stack_value = put_data_into_word(abs_data);
-	copy_word_flags(&operand, &new_stack_value);
+void sluff_byte(cpu_t *cpu)
+{
+	pop_operand_byte(cpu);
+}
 
-	has_overflowed = abs_data >> 31;
-	if (has_overflowed)
-	{
-		set_flag_word(&new_stack_value, 0);
-	}
+void sluff_halfword(cpu_t *cpu)
+{
+	pop_operand_halfword(cpu);
+}
 
-	push_operand_word(new_stack_value, cpu);
+void sluff_word(cpu_t *cpu)
+{
+	pop_operand_word(cpu);
+}
+
+void xch_byte(cpu_t *cpu)
+{
+	byte_t operand1, operand2;
+
+	operand1 = pop_operand_byte(cpu);
+	operand2 = pop_operand_byte(cpu);
+	push_operand_byte(operand1, cpu);
+	push_operand_byte(operand2, cpu);
+}
+
+void xch_halfword(cpu_t *cpu)
+{
+	halfword_t operand1, operand2;
+
+	operand1 = pop_operand_halfword(cpu);
+	operand2 = pop_operand_halfword(cpu);
+	push_operand_halfword(operand1, cpu);
+	push_operand_halfword(operand2, cpu);
+}
+
+void xch_word(cpu_t *cpu)
+{
+	word_t operand1, operand2;
+
+	operand1 = pop_operand_word(cpu);
+	operand2 = pop_operand_word(cpu);
+	push_operand_word(operand1, cpu);
+	push_operand_word(operand2, cpu);
 }
 
 void hcf(byte_t opcode, cpu_t *cpu)
@@ -617,24 +617,6 @@ void hcf(byte_t opcode, cpu_t *cpu)
 	exit(EXIT_FAILURE);
 }
 
-operand_table_t opcodes[512] = {
-	[ABS_SHORT     | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_short},
-	[ABS_LONG      | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_long},
-
-	[ONE_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = one_byte},
-	[DUP_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_byte},
-	[DUP_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_halfword},
-	[DUP_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_word},
-
-	[SLUFF_BYTE    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_byte},
-	[SLUFF_HALFWORD| FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_halfword},
-	[SLUFF_WORD    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_word},
-
-	[XCH_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_byte},
-	[XCH_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_halfword},
-	[XCH_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_word}
-};
-
 void pre_execute(num_operands_t num_operands, cpu_t *cpu)
 {
 }
@@ -652,8 +634,8 @@ void instruction_fetch_loop(cpu_t *cpu)
 {
 	for (;;)
 	{
-		raw_address_t instruction  = get_address_from_pointer(&(cpu->pr[0]), cpu);
 		uint16_t new_pointer_value = 0;
+		raw_address_t instruction  = get_address_from_pointer(&(cpu->pr[0]), cpu);
 		byte_t opcode              = get_byte_from_memory(instruction);
 
 		operand_table_t decoded_opcode = opcodes[decode_byte_t(opcode)];

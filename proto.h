@@ -102,22 +102,63 @@ typedef enum
 
 typedef enum
 {
-	ONE_BYTE   = b(00000100),
+	ZERO_BYTE,
+	ZERO_HALFWORD,
+	ZERO_WORD,
+	ZERO_DOUBLEWORD,
+	ONE_BYTE,
 	ONE_HALFWORD,
 	ONE_WORD,
 	ONE_DOUBLEWORD,
-	DUP_BYTE   = b(00100100),
-	DUP_HALFWORD,
-	DUP_WORD,
-	DUP_DOUBLEWORD,
-	SLUFF_BYTE = b(00100000),
+	COUNT_BYTE,
+	COUNT_HALFWORD,
+	COUNT_WORD,
+	COUNT_DOUBLEWORD,
+	BIT_BYTE,
+	BIT_HALFWORD,
+	BIT_WORD,
+	BIT_DOUBLEWORD,
+	AND_BYTE,
+	AND_HALFWORD,
+	AND_WORD,
+	AND_DOUBLEWORD,
+	OR_BYTE,
+	OR_HALFWORD,
+	OR_WORD,
+	OR_DOUBLEWORD,
+	XOR_BYTE,
+	XOR_HALFWORD,
+	XOR_WORD,
+	XOR_DOUBLEWORD,
+	EQV_BYTE,
+	EQV_HALFWORD,
+	EQV_WORD,
+	EQV_DOUBLEWORD,
+	SLUFF_BYTE,
 	SLUFF_HALFWORD,
 	SLUFF_WORD,
 	SLUFF_DOUBLEWORD,
-	XCH_BYTE   = b(00101000),
+	DUP_BYTE,
+	DUP_HALFWORD,
+	DUP_WORD,
+	DUP_DOUBLEWORD,
+	XCH_BYTE,
 	XCH_HALFWORD,
 	XCH_WORD,
-	XCH_DOUBLWORD
+	XCH_DOUBLWORD,
+	CPRL_BYTE,
+	CPRL_HALFWORD,
+	CPRL_WORD,
+	CPRL_DOUBLEWORD,
+	NOT_BYTE,
+	NOT_HALFWORD,
+	NOT_WORD,
+	NOT_DOUBLEWORD,
+	ACTP_BYTE,
+	ACTP_HALFWORD,
+	ACTP_WORD,
+	ACTP_DOUBLEWORD,
+	INRT
 } flagless_opcode_t;
 
 raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu);
@@ -204,17 +245,17 @@ void add_long(cpu_t *cpu);
 
 void one_byte(cpu_t *cpu);
 
-void dup_byte(cpu_t *cpu);
-
-void dup_halfword(cpu_t *cpu);
-
-void dup_word(cpu_t *cpu);
-
 void sluff_byte(cpu_t *cpu);
 
 void sluff_halfword(cpu_t *cpu);
 
 void sluff_word(cpu_t *cpu);
+
+void dup_byte(cpu_t *cpu);
+
+void dup_halfword(cpu_t *cpu);
+
+void dup_word(cpu_t *cpu);
 
 void xch_byte(cpu_t *cpu);
 
@@ -223,6 +264,12 @@ void xch_halfword(cpu_t *cpu);
 void xch_word(cpu_t *cpu);
 
 void hcf(byte_t opcode, cpu_t *cpu);
+
+void pre_execute(num_operands_t num_operands, cpu_t *cpu);
+
+void post_execute(num_operands_t num_operands, cpu_t *cpu);
+
+size_t decode_byte_t(byte_t byte);
 
 void instruction_fetch_loop(cpu_t *cpu);
 
@@ -235,3 +282,23 @@ void core_memory_ctor(void);
 void core_memory_dtor(void);
 
 void load_object_file(const char *objfile);
+
+
+operand_table_t opcodes[512] = {
+	[ABS_SHORT     | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_short},
+	[ABS_LONG      | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_long},
+
+	[ONE_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = one_byte},
+
+	[SLUFF_BYTE    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_byte},
+	[SLUFF_HALFWORD| FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_halfword},
+	[SLUFF_WORD    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_word},
+
+	[DUP_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_byte},
+	[DUP_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_halfword},
+	[DUP_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_word},
+
+	[XCH_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_byte},
+	[XCH_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_halfword},
+	[XCH_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_word}
+};
