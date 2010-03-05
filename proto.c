@@ -627,7 +627,7 @@ void post_execute(num_operands_t num_operands, cpu_t *cpu)
 
 size_t decode_byte_t(byte_t byte)
 {
-	return (byte.data) | (byte.flag << 8);
+	return (size_t)(byte.data | (byte.flag << 8));
 }
 
 void instruction_fetch_loop(cpu_t *cpu)
@@ -646,9 +646,13 @@ void instruction_fetch_loop(cpu_t *cpu)
 				decoded_opcode.opcode_impl.zero_args(cpu);
 				new_pointer_value = increment_ip(1, cpu);
 				break;
-/*			case ONE_OPS:
-				uint16_t first_operand = get_address_from_poin
-				decoded_opcode.opcode_impl.one_args(sdfds, cpu);
+			case ONE_OPS:
+/*				raw_address_t first_operand = 1+get_address_from_pointer(&(cpu->pr[0]));
+				size_t register1;
+				raw_address_t next_operand = decode_one_operand(first_operand, &register1, cpu);
+				decoded_opcode.opcode_impl.one_args(resister1, cpu);
+				post_execute_operand(first_operand, cpu);
+				new_pointer_value = next_operand; // what if we have jump?
 				break;*/
 			default:
 				hcf(opcode, cpu);
