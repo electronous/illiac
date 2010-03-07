@@ -49,13 +49,22 @@ typedef size_t raw_address_t;
 
 #define PR_SIZE 14
 #define BR_SIZE 6
+#define STATUS_INDICATORS_SIZE 6
+
 #define NUM_BYTES (1 << 24)
+
+#define IP  0
+#define OSP 13
+#define ASP 14
+
+#define CONDITIONAL_SUBTRACT 0
 
 typedef struct
 {
 	number_format_t pr[PR_SIZE];
 	base_pointer_t br[BR_SIZE];
 	asf_t pr_14;
+	bool status_indicators[STATUS_INDICATORS_SIZE];
 } cpu_t;
 
 typedef struct
@@ -68,6 +77,14 @@ typedef struct
 	bool    last;
 	byte_t  m[2];
 } operand_t;
+
+typedef struct
+{
+	bool hit_conditional_subtract;
+	bool conditional_subtract_result;
+	bool changed_pr0;
+	uint16_t new_pr0;
+} operand_return_t;
 
 typedef enum
 {
@@ -311,10 +328,6 @@ void xch_halfword(cpu_t *cpu);
 void xch_word(cpu_t *cpu);
 
 void hcf(byte_t opcode, cpu_t *cpu);
-
-void pre_execute(num_operands_t num_operands, cpu_t *cpu);
-
-void post_execute(num_operands_t num_operands, cpu_t *cpu);
 
 size_t decode_byte_t(byte_t byte);
 

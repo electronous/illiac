@@ -18,7 +18,6 @@ raw_address_t get_address_common(number_format_t p, const cpu_t *cpu)
 
 	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
 						   (cpu->br[br_num].start_page.low.data  << 8));
-
 }
 
 raw_address_t get_address_from_pointer(number_format_t p, const cpu_t *cpu)
@@ -288,24 +287,57 @@ void copy_word_flags(const word_t *from, word_t *to)
 	copy_halfword_flags(&(from->low),  &(to->low));
 }
 
-byte_t pop_operand_byte(cpu_t *cpu)
+byte_t peek_operand_byte(const cpu_t *cpu)
 {
-	halfword_t halfword;
 	raw_address_t operand_pointer;
 	uint16_t old_addr, new_addr;
 
-	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
+	old_addr = get_data_from_halfword(cpu->pr[OSP].pointer_value);
 
 	assert(old_addr >= 1);
 
 	new_addr = (uint16_t)(old_addr - 1);
 
-	halfword = put_data_into_halfword(new_addr);
-	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+	number_format_t operand_number_format = {
+		.pointer_value = put_data_into_halfword(new_addr)
+	};
 
-	cpu->pr[13].pointer_value = halfword;
+	copy_halfword_flags(&(cpu->pr[OSP].pointer_value), &(operand_number_format.pointer_value));
+	copy_halfword_flags(&(cpu->pr[OSP].pointer_link),  &(operand_number_format.pointer_link));
 
-	operand_pointer = get_address_from_pointer(cpu->pr[13], cpu);
+	operand_pointer = get_address_from_pointer(operand_number_format, cpu);
+	return get_byte_from_memory(operand_pointer);
+}
+
+halfword_t peek_operand_halfword(const cpu_t *cpu)
+{
+	halfword_t halfword;
+	halfword.low  = peek_operand_byte(cpu);
+	halfword.high = peek_operand_byte(cpu);
+	return halfword;
+}
+
+byte_t pop_operand_byte(cpu_t *cpu)
+{
+	raw_address_t operand_pointer;
+	uint16_t old_addr, new_addr;
+
+	old_addr = get_data_from_halfword(cpu->pr[OSP].pointer_value);
+
+	assert(old_addr >= 1);
+
+	new_addr = (uint16_t)(old_addr - 1);
+
+	number_format_t operand_number_format = {
+		.pointer_value = put_data_into_halfword(new_addr),
+		.pointer_link = cpu->pr[OSP].pointer_link
+	};
+
+	copy_halfword_flags(&(cpu->pr[OSP].pointer_value), &(operand_number_format.pointer_value));
+
+	cpu->pr[OSP] = operand_number_format;
+
+	operand_pointer = get_address_from_pointer(cpu->pr[OSP], cpu);
 	return get_byte_from_memory(operand_pointer);
 }
 
@@ -327,20 +359,23 @@ word_t pop_operand_word(cpu_t *cpu)
 
 void push_operand_byte(byte_t arg, cpu_t *cpu)
 {
-	halfword_t halfword;
 	raw_address_t operand_pointer;
 	uint16_t old_addr, new_addr;
 
-	operand_pointer = get_address_from_pointer(cpu->pr[13], cpu);
-	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
+	operand_pointer = get_address_from_pointer(cpu->pr[OSP], cpu);
+	old_addr = get_data_from_halfword(cpu->pr[OSP].pointer_value);
 	new_addr = (uint16_t)(old_addr + 1);
 
 	assert(new_addr > old_addr);
 
-	halfword = put_data_into_halfword(new_addr);
-	copy_halfword_flags(&(cpu->pr[13].pointer_value), &halfword);
+	number_format_t operand_number_format = {
+		.pointer_value = put_data_into_halfword(new_addr),
+		.pointer_link = cpu->pr[OSP].pointer_link
+	};
 
-	cpu->pr[13].pointer_value = halfword;
+	copy_halfword_flags(&(cpu->pr[OSP].pointer_value), &(operand_number_format.pointer_value));
+
+	cpu->pr[OSP] = operand_number_format;
 
 	put_byte_into_memory(arg, operand_pointer);
 }
@@ -613,29 +648,15 @@ void hcf(byte_t opcode, cpu_t *cpu)
 		printf("\t\tflag: %d\n", get_flag_from_byte(byte));
 	}
 	printf("\n");
-	core_memory_dtor();
 	exit(EXIT_FAILURE);
 }
-
-void pre_execute(num_operands_t num_operands, cpu_t *cpu)
-{
-}
-
-void post_execute(num_operands_t num_operands, cpu_t *cpu)
-{
-}
-
-void post_execute_operand(raw_address_t operand, cpu_t *cpu)
-{
-}
-
 
 size_t decode_byte_t(byte_t byte)
 {
 	return (size_t)(byte.data | (byte.flag << 8));
 }
 
-operand_t decode_operand(raw_address_t operand_address, cpu_t *cpu)
+operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 {
 	byte_t operand_preamble = get_byte_from_memory(operand_address);
 	bool    flag = get_flag_from_byte(operand_preamble);
@@ -649,17 +670,23 @@ operand_t decode_operand(raw_address_t operand_address, cpu_t *cpu)
 		.last     = (data >> 0) & 1
 	};
 	assert(operand.pointer_register_index < PR_SIZE);
+
 	if (operand.is_long)
 	{
-		number_format_t m0_nf = {
-			.pointer_value = put_data_into_halfword(increment_ip(2, cpu))
+		number_format_t m0_number_format = {
+			.pointer_value = put_data_into_halfword(increment_ip(2, cpu)),
+			.pointer_link = cpu->pr[IP].pointer_link
 		};
-		raw_address_t m0_addr = get_address_from_pointer(m0_nf, cpu);
+		copy_halfword_flags(&(cpu->pr[IP].pointer_value), &(m0_number_format.pointer_value));
 
-		number_format_t m1_nf = {
-			.pointer_value = put_data_into_halfword(increment_ip(3, cpu))
+		number_format_t m1_number_format = {
+			.pointer_value = put_data_into_halfword(increment_ip(3, cpu)),
+			.pointer_link = cpu->pr[IP].pointer_link
 		};
-		raw_address_t m1_addr = get_address_from_pointer(m1_nf, cpu);
+		copy_halfword_flags(&(cpu->pr[IP].pointer_value), &(m1_number_format.pointer_value));
+
+		raw_address_t m0_addr = get_address_from_pointer(m0_number_format, cpu);
+		raw_address_t m1_addr = get_address_from_pointer(m1_number_format, cpu);
 
 		operand.m[0] = get_byte_from_memory(m0_addr);
 		operand.m[1] = get_byte_from_memory(m1_addr);
@@ -670,12 +697,24 @@ operand_t decode_operand(raw_address_t operand_address, cpu_t *cpu)
 			assert(second_pr_index <= 15);
 			if (second_pr_index == 15)
 			{
-			}
-			else if (second_pr_index == 14)
-			{
+				operand.m[0].data = get_data_from_byte(peek_operand_halfword(cpu).high);
+				operand.m[1].data = get_data_from_byte(peek_operand_halfword(cpu).low);
 			}
 			else
 			{
+				halfword_t m_halfword;
+				if (second_pr_index == ASP)
+				{
+					m_halfword = cpu->pr_14.free_list_link;
+				}
+				else
+				{
+					m_halfword = cpu->pr[second_pr_index].pointer_value;
+				}
+				uint8_t m0_data = get_data_from_byte(m_halfword.high);
+				uint8_t m1_data = get_data_from_byte(m_halfword.low);
+				operand.m[0].data = m0_data;
+				operand.m[1].data = m1_data;
 			}
 		}
 	}
@@ -683,11 +722,149 @@ operand_t decode_operand(raw_address_t operand_address, cpu_t *cpu)
 	return operand;
 }
 
+void handle_preslash(operand_t operand, cpu_t *cpu)
+{
+	if (!operand.pre_push)
+	{
+		return;
+	}
+
+	number_format_t temp = {
+		.pointer_link  = cpu->pr_14.consecutive_storage_link,
+		.pointer_value = cpu->pr_14.free_list_link
+	};
+	raw_address_t new_cell_addr = get_address_from_pointer(temp, cpu);
+
+	uint8_t pointer_register_index = operand.pointer_register_index;
+	assert(pointer_register_index < PR_SIZE);
+
+	halfword_t old_data = get_halfword_from_memory(new_cell_addr);
+
+	put_halfword_into_memory(cpu->pr[pointer_register_index].pointer_link, new_cell_addr);
+
+	temp.pointer_value = put_data_into_halfword((uint16_t)(get_data_from_halfword(temp.pointer_value) + 2));
+	copy_halfword_flags(&(cpu->pr_14.free_list_link), &(temp.pointer_value));
+
+	new_cell_addr = get_address_from_pointer(temp, cpu);
+
+	put_halfword_into_memory(cpu->pr[pointer_register_index].pointer_value, new_cell_addr);
+
+	uint16_t csl_data = get_data_from_halfword(cpu->pr_14.consecutive_storage_link);
+	uint16_t fll_data = get_data_from_halfword(cpu->pr_14.free_list_link);
+
+	halfword_t new_link = put_data_into_halfword(fll_data);
+	copy_halfword_flags(&(cpu->pr[pointer_register_index].pointer_link), &new_link);
+	cpu->pr[pointer_register_index].pointer_link = new_link;
+
+	if (fll_data == csl_data)
+	{
+		halfword_t new_csl;
+		halfword_t new_fll;
+
+		assert(csl_data > 3);
+		csl_data = (uint16_t)(csl_data - 4);
+		fll_data = csl_data;
+
+		new_csl = put_data_into_halfword(csl_data);
+		copy_halfword_flags(&(cpu->pr_14.consecutive_storage_link), &new_csl);
+		cpu->pr_14.consecutive_storage_link = new_csl;
+
+		new_fll = put_data_into_halfword(fll_data);
+		copy_halfword_flags(&(cpu->pr_14.free_list_link), &new_fll);
+		cpu->pr_14.free_list_link = new_fll;
+	}
+	else
+	{
+		copy_halfword_flags(&(cpu->pr_14.free_list_link), &old_data);
+		cpu->pr_14.free_list_link = old_data;
+	}
+}
+
+operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
+{
+	operand_return_t operand_return = {
+		.hit_conditional_subtract    = 0,
+		.conditional_subtract_result = 0,
+		.changed_pr0 = false,
+		.new_pr0 = 0
+	};
+
+	if (!operand.is_long && operand.indirect)
+	{
+		assert(operand.pointer_register_index < PR_SIZE);
+		raw_address_t indirect_address = get_address_from_pointer(cpu->pr[operand.pointer_register_index], cpu);
+
+		halfword_t indirect_memory = get_halfword_from_memory(indirect_address);
+		copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &indirect_memory);
+
+		cpu->pr[operand.pointer_register_index].pointer_value = indirect_memory;
+	}
+	else if (operand.is_long)
+	{
+		bool m0_flag = get_flag_from_byte(operand.m[0]);
+		bool m1_flag = get_flag_from_byte(operand.m[1]);
+
+		halfword_t new_halfword = {
+			.high = operand.m[0],
+			.low  = operand.m[1]
+		};
+
+		if (m0_flag)
+		{
+			if (m1_flag)
+			{
+				uint16_t count = get_data_from_halfword(new_halfword);
+				uint16_t pointer = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+				for (uint16_t i = 0; (i < count) && (pointer != 0); ++i)
+				{
+					raw_address_t indirect_address = get_address_from_pointer(cpu->pr[operand.pointer_register_index], cpu);
+					pointer = get_data_from_halfword(get_halfword_from_memory(indirect_address));
+
+					halfword_t new_halfword = put_data_into_halfword(pointer);
+					copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
+					cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+				}
+			}
+			else
+			{
+				uint16_t new_data = get_data_from_halfword(new_halfword);
+				uint16_t old_data = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+				new_data = (uint16_t)(old_data - new_data);
+				if ((new_data >> 15) == 0 && new_data > 0)
+				{
+					new_halfword = put_data_into_halfword(new_data);
+
+					copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
+					cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+
+					cpu->status_indicators[CONDITIONAL_SUBTRACT] |= false;
+				}
+				else
+				{
+					cpu->status_indicators[CONDITIONAL_SUBTRACT] = true;
+				}
+			}
+		}
+		else
+		{
+			if (m1_flag)
+			{
+				uint16_t new_data = get_data_from_halfword(new_halfword);
+				uint16_t old_data = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+				new_halfword = put_data_into_halfword((uint16_t)(old_data + new_data));
+			}
+
+			copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
+			cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+		}
+	}
+}
+
 void instruction_fetch_loop(cpu_t *cpu)
 {
 	for (;;)
 	{
-		uint16_t new_pointer_value = 0;
+		uint16_t new_pointer_addr = 0;
 		raw_address_t instruction  = get_address_from_pointer(cpu->pr[0], cpu);
 		byte_t opcode              = get_byte_from_memory(instruction);
 
@@ -695,22 +872,25 @@ void instruction_fetch_loop(cpu_t *cpu)
 
 		switch (decoded_opcode.num_operands)
 		{
+			operand_t operand_1;
+			operand_t operand_2;
+
 			case ZERO_OPS:
 				decoded_opcode.opcode_impl.zero_args(cpu);
-				new_pointer_value = increment_ip(1, cpu);
+				new_pointer_addr = increment_ip(1, cpu);
 				break;
 			case ONE_OPS:
 				{
-					number_format_t first_argument_nf = {
-						.pointer_value = put_data_into_halfword(increment_ip(1, cpu))
+					number_format_t arg_number_format = {
+						.pointer_value = put_data_into_halfword(increment_ip(1, cpu)),
+						.pointer_link = cpu->pr[IP].pointer_link
 					};
-					raw_address_t arg_1_addr = get_address_from_pointer(first_argument_nf, cpu);
-					number_format_t second_argument_nf = {
-						.pointer_value = put_data_into_halfword(increment_ip(2, cpu))
-					};
-					raw_address_t arg_2_addr = get_address_from_pointer(second_argument_nf, cpu);
+					copy_halfword_flags(&(cpu->pr[IP].pointer_value), &(arg_number_format.pointer_value));
+
+					raw_address_t arg_addr = get_address_from_pointer(arg_number_format, cpu);
+					operand_1 = decode_operand(arg_addr, cpu);
+					handle_preslash(operand_1, cpu);
 				}
-				//raw_address_t ip_offset = decode_operand(first_operand, cpu);
 				//decoded_opcode.opcode_impl.one_args(resister1, cpu);
 				//post_execute_operand(first_operand, cpu);
 				//new_pointer_value = increment_ip(1 + ip_offset, cpu);
@@ -719,13 +899,15 @@ void instruction_fetch_loop(cpu_t *cpu)
 				hcf(opcode, cpu);
 		}
 
-		cpu->pr[0].pointer_value = put_data_into_halfword(new_pointer_value);
+		halfword_t new_pointer_value = put_data_into_halfword(new_pointer_addr);
+		copy_halfword_flags(&(cpu->pr[IP].pointer_value), &new_pointer_value);
+		cpu->pr[IP].pointer_value = new_pointer_value;
 	}
 }
 
 uint16_t increment_ip(uint16_t increment, const cpu_t *cpu)
 {
-	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[0].pointer_value);
+	uint16_t old_pointer_value = get_data_from_halfword(cpu->pr[IP].pointer_value);
 	uint16_t new_pointer_value = (uint16_t)(old_pointer_value + increment);
 	assert(new_pointer_value > old_pointer_value);
 	return new_pointer_value;
@@ -735,8 +917,8 @@ void cpu_ctor(cpu_t *cpu)
 {
 	memset(cpu, 0, sizeof(*cpu));
 
-	/* Set pr[13] to 0x1000 */
-	cpu->pr[13].pointer_value = put_data_into_halfword(0x1000);
+	/* Set pr[OSP] to 0x1000 */
+	cpu->pr[OSP].pointer_value = put_data_into_halfword(0x1000);
 }
 
 void core_memory_ctor(void)
@@ -805,12 +987,13 @@ int main(int argc, const char *argv[])
 	}
 
 	cpu_ctor(&cpu);
+
 	core_memory_ctor();
+	atexit(core_memory_dtor);
 
 	load_object_file(objfile);
 
 	instruction_fetch_loop(&cpu);
 
-	core_memory_dtor();
-	return EXIT_SUCCESS;
+	exit(EXIT_SUCCESS);
 }
