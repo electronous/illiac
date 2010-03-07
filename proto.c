@@ -693,7 +693,7 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 
 		if (operand.indirect)
 		{
-			uint8_t second_pr_index = get_data_from_byte(operand.m[0]) >> 4;
+			uint8_t second_pr_index = (uint8_t)(get_data_from_byte(operand.m[0]) >> 4);
 			assert(second_pr_index <= 15);
 			if (second_pr_index == 15)
 			{
@@ -826,7 +826,7 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 					raw_address_t indirect_address = get_address_from_pointer(cpu->pr[operand.pointer_register_index], cpu);
 					pointer = get_data_from_halfword(get_halfword_from_memory(indirect_address));
 
-					halfword_t new_halfword = put_data_into_halfword(pointer);
+					new_halfword = put_data_into_halfword(pointer);
 					copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
 					if (operand.pointer_register_index != IP)
 					{
@@ -913,9 +913,9 @@ void instruction_fetch_loop(cpu_t *cpu)
 					operand_1 = decode_operand(arg_addr, cpu);
 					handle_preslash(operand_1, cpu);
 				}
-				//decoded_opcode.opcode_impl.one_args(resister1, cpu);
-				//post_execute_operand(first_operand, cpu);
-				//new_pointer_value = increment_ip(1 + ip_offset, cpu);
+				/*decoded_opcode.opcode_impl.one_args(resister1, cpu);
+				post_execute_operand(first_operand, cpu);
+				new_pointer_value = increment_ip(1 + ip_offset, cpu);*/
 				break;
 			default:
 				hcf(opcode, cpu);

@@ -287,6 +287,10 @@ void copy_halfword_flags(const halfword_t *from, halfword_t *to);
 
 void copy_word_flags(const word_t *from, word_t *to);
 
+byte_t peek_operand_byte(const cpu_t *cpu);
+
+halfword_t peek_operand_halfword(const cpu_t *cpu);
+
 byte_t pop_operand_byte(cpu_t *cpu);
 
 halfword_t pop_operand_halfword(cpu_t *cpu);
@@ -330,6 +334,12 @@ void xch_word(cpu_t *cpu);
 void hcf(byte_t opcode, cpu_t *cpu);
 
 size_t decode_byte_t(byte_t byte);
+
+operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu);
+
+void handle_preslash(operand_t operand, cpu_t *cpu);
+
+operand_return_t handle_operand(operand_t operand, cpu_t *cpu);
 
 void instruction_fetch_loop(cpu_t *cpu);
 
