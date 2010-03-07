@@ -58,15 +58,16 @@ typedef struct
 	asf_t pr_14;
 } cpu_t;
 
-/*typedef struct
+typedef struct
 {
-	uint8_t  tag        : 4;
-	bool     slash_push : 1;
-	bool     slash_pop  : 1;
-	bool     indirected : 1;
-	bool     last       : 1;
-	bool     flag;
-} operand_t;*/
+	bool    is_long;
+	uint8_t pointer_register_index;
+	bool    pre_push;
+	bool    post_pop;
+	bool    indirect;
+	bool    last;
+	byte_t  m[2];
+} operand_t;
 
 typedef enum
 {
@@ -145,7 +146,7 @@ typedef enum
 	XCH_BYTE,
 	XCH_HALFWORD,
 	XCH_WORD,
-	XCH_DOUBLWORD,
+	XCH_DOUBLEWORD,
 	CPRL_BYTE,
 	CPRL_HALFWORD,
 	CPRL_WORD,
@@ -158,14 +159,60 @@ typedef enum
 	ACTP_HALFWORD,
 	ACTP_WORD,
 	ACTP_DOUBLEWORD,
-	INRT
+	INRT,
+	LTR = b(00111010),
+	STR,
+	SVC,
+	SVR,
+	WHO = b(00111111),
+	PUSH_BYTE,
+	PUSH_HALFWORD,
+	PUSH_WORD,
+	PUSH_DOUBLEWORD,
+	LD_BYTE,
+	LD_HALFWORD,
+	LD_WORD,
+	LD_DOUBLEWORD,
+	POP_BYTE,
+	POP_HALFWORD,
+	POP_WORD,
+	POP_DOUBLEWORD,
+	ST_BYTE,
+	ST_HALFWORD,
+	ST_WORD,
+	ST_DOUBLEWORD,
+	SET_BYTE,
+	SET_HALFWORD,
+	SET_WORD,
+	SET_DOUBLEWORD,
+	RESET_BYTE,
+	RESET_HALFWORD,
+	RESET_WORD,
+	RESET_DOUBLEWORD,
+	TEST_BYTE,
+	TEST_HALFWORD,
+	TEST_WORD,
+	TEST_DOUBLEWORD,
+	TESTM_BYTE,
+	TESTM_HALFWORD,
+	TESTM_WORD,
+	TESTM_DOUBLEWORD,
+	LS_BYTE,
+	LS_HALFWORD,
+	LS_WORD,
+	RS_BYTE = b(01100100),
+	RS_HALFWORD,
+	RS_WORD,
+	SLEEP = b(01111100),
+	INCK,
+	SIM
 } flagless_opcode_t;
 
-raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu);
+raw_address_t get_address_common(number_format_t p, const cpu_t *cpu);
 
-raw_address_t get_address_from_pointer(const number_format_t *p, const cpu_t *cpu);
+raw_address_t get_address_from_pointer(number_format_t p, const cpu_t *cpu);
 
-raw_address_t get_address_from_link(const number_format_t *p, const cpu_t *cpu);
+raw_address_t get_address_from_link(number_format_t p, const cpu_t *cpu);
 
 number_format_t get_pointer_register_from_memory(raw_address_t addr);
 

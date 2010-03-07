@@ -6,11 +6,11 @@
 
 byte_t *core_memory;
 
-raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
+raw_address_t get_address_common(number_format_t p, const cpu_t *cpu)
 {
-	uint8_t third_flag  = (uint8_t)((get_flag_from_byte(p->pointer_link.low)   << 2) & 0xFF);
-	uint8_t second_flag = (uint8_t)((get_flag_from_byte(p->pointer_value.high) << 1) & 0xFF);
-	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p->pointer_value.low)  << 0) & 0xFF);
+	uint8_t third_flag  = (uint8_t)((get_flag_from_byte(p.pointer_link.low)   << 2) & 0xFF);
+	uint8_t second_flag = (uint8_t)((get_flag_from_byte(p.pointer_value.high) << 1) & 0xFF);
+	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p.pointer_value.low)  << 0) & 0xFF);
 
 	uint8_t br_num = (uint8_t)(first_flag | second_flag | third_flag);
 
@@ -21,22 +21,22 @@ raw_address_t get_address_common(const number_format_t *p, const cpu_t *cpu)
 
 }
 
-raw_address_t get_address_from_pointer(const number_format_t *p, const cpu_t *cpu)
+raw_address_t get_address_from_pointer(number_format_t p, const cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
-	ret |= (raw_address_t) get_data_from_byte(p->pointer_value.low);
-	ret += (raw_address_t)(get_data_from_byte(p->pointer_value.high) << 8);
+	ret |= (raw_address_t) get_data_from_byte(p.pointer_value.low);
+	ret += (raw_address_t)(get_data_from_byte(p.pointer_value.high) << 8);
 
 	return ret;
 }
 
-raw_address_t get_address_from_link(const number_format_t *p, const cpu_t *cpu)
+raw_address_t get_address_from_link(number_format_t p, const cpu_t *cpu)
 {
 	raw_address_t ret;
 	ret = get_address_common(p, cpu);
-	ret |= (raw_address_t) get_data_from_byte(p->pointer_link.low);
-	ret += (raw_address_t)(get_data_from_byte(p->pointer_link.high) << 8);
+	ret |= (raw_address_t) get_data_from_byte(p.pointer_link.low);
+	ret += (raw_address_t)(get_data_from_byte(p.pointer_link.high) << 8);
 
 	return ret;
 }
@@ -305,7 +305,7 @@ byte_t pop_operand_byte(cpu_t *cpu)
 
 	cpu->pr[13].pointer_value = halfword;
 
-	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	operand_pointer = get_address_from_pointer(cpu->pr[13], cpu);
 	return get_byte_from_memory(operand_pointer);
 }
 
@@ -331,7 +331,7 @@ void push_operand_byte(byte_t arg, cpu_t *cpu)
 	raw_address_t operand_pointer;
 	uint16_t old_addr, new_addr;
 
-	operand_pointer = get_address_from_pointer(&(cpu->pr[13]), cpu);
+	operand_pointer = get_address_from_pointer(cpu->pr[13], cpu);
 	old_addr = get_data_from_halfword(cpu->pr[13].pointer_value);
 	new_addr = (uint16_t)(old_addr + 1);
 
@@ -625,9 +625,62 @@ void post_execute(num_operands_t num_operands, cpu_t *cpu)
 {
 }
 
+void post_execute_operand(raw_address_t operand, cpu_t *cpu)
+{
+}
+
+
 size_t decode_byte_t(byte_t byte)
 {
 	return (size_t)(byte.data | (byte.flag << 8));
+}
+
+operand_t decode_operand(raw_address_t operand_address, cpu_t *cpu)
+{
+	byte_t operand_preamble = get_byte_from_memory(operand_address);
+	bool    flag = get_flag_from_byte(operand_preamble);
+	uint8_t data = get_data_from_byte(operand_preamble);
+	operand_t operand = {
+		.is_long  = flag,
+		.pointer_register_index = (uint8_t)(data >> 4),
+		.pre_push = (data >> 3) & 1,
+		.post_pop = (data >> 2) & 1,
+		.indirect = (data >> 1) & 1,
+		.last     = (data >> 0) & 1
+	};
+	assert(operand.pointer_register_index < PR_SIZE);
+	if (operand.is_long)
+	{
+		number_format_t m0_nf = {
+			.pointer_value = put_data_into_halfword(increment_ip(2, cpu))
+		};
+		raw_address_t m0_addr = get_address_from_pointer(m0_nf, cpu);
+
+		number_format_t m1_nf = {
+			.pointer_value = put_data_into_halfword(increment_ip(3, cpu))
+		};
+		raw_address_t m1_addr = get_address_from_pointer(m1_nf, cpu);
+
+		operand.m[0] = get_byte_from_memory(m0_addr);
+		operand.m[1] = get_byte_from_memory(m1_addr);
+
+		if (operand.indirect)
+		{
+			uint8_t second_pr_index = get_data_from_byte(operand.m[0]) >> 4;
+			assert(second_pr_index <= 15);
+			if (second_pr_index == 15)
+			{
+			}
+			else if (second_pr_index == 14)
+			{
+			}
+			else
+			{
+			}
+		}
+	}
+
+	return operand;
 }
 
 void instruction_fetch_loop(cpu_t *cpu)
@@ -635,7 +688,7 @@ void instruction_fetch_loop(cpu_t *cpu)
 	for (;;)
 	{
 		uint16_t new_pointer_value = 0;
-		raw_address_t instruction  = get_address_from_pointer(&(cpu->pr[0]), cpu);
+		raw_address_t instruction  = get_address_from_pointer(cpu->pr[0], cpu);
 		byte_t opcode              = get_byte_from_memory(instruction);
 
 		operand_table_t decoded_opcode = opcodes[decode_byte_t(opcode)];
@@ -647,13 +700,21 @@ void instruction_fetch_loop(cpu_t *cpu)
 				new_pointer_value = increment_ip(1, cpu);
 				break;
 			case ONE_OPS:
-/*				raw_address_t first_operand = 1+get_address_from_pointer(&(cpu->pr[0]));
-				size_t register1;
-				raw_address_t next_operand = decode_one_operand(first_operand, &register1, cpu);
-				decoded_opcode.opcode_impl.one_args(resister1, cpu);
-				post_execute_operand(first_operand, cpu);
-				new_pointer_value = next_operand; // what if we have jump?
-				break;*/
+				{
+					number_format_t first_argument_nf = {
+						.pointer_value = put_data_into_halfword(increment_ip(1, cpu))
+					};
+					raw_address_t arg_1_addr = get_address_from_pointer(first_argument_nf, cpu);
+					number_format_t second_argument_nf = {
+						.pointer_value = put_data_into_halfword(increment_ip(2, cpu))
+					};
+					raw_address_t arg_2_addr = get_address_from_pointer(second_argument_nf, cpu);
+				}
+				//raw_address_t ip_offset = decode_operand(first_operand, cpu);
+				//decoded_opcode.opcode_impl.one_args(resister1, cpu);
+				//post_execute_operand(first_operand, cpu);
+				//new_pointer_value = increment_ip(1 + ip_offset, cpu);
+				break;
 			default:
 				hcf(opcode, cpu);
 		}
