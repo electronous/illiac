@@ -82,8 +82,8 @@ typedef struct
 {
 	bool hit_conditional_subtract;
 	bool conditional_subtract_result;
-	bool changed_pr0;
-	uint16_t new_pr0;
+	bool changed_IP;
+	halfword_t new_IP;
 } operand_return_t;
 
 typedef enum

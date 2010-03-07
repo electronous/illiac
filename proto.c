@@ -783,10 +783,8 @@ void handle_preslash(operand_t operand, cpu_t *cpu)
 operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 {
 	operand_return_t operand_return = {
-		.hit_conditional_subtract    = 0,
-		.conditional_subtract_result = 0,
-		.changed_pr0 = false,
-		.new_pr0 = 0
+		.hit_conditional_subtract    = false,
+		.changed_IP = false,
 	};
 
 	if (!operand.is_long && operand.indirect)
@@ -797,7 +795,15 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 		halfword_t indirect_memory = get_halfword_from_memory(indirect_address);
 		copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &indirect_memory);
 
-		cpu->pr[operand.pointer_register_index].pointer_value = indirect_memory;
+		if (operand.pointer_register_index != IP)
+		{
+			cpu->pr[operand.pointer_register_index].pointer_value = indirect_memory;
+		}
+		else
+		{
+			operand_return.changed_IP = true;
+			operand_return.new_IP = indirect_memory;
+		}
 	}
 	else if (operand.is_long)
 	{
@@ -822,7 +828,14 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 
 					halfword_t new_halfword = put_data_into_halfword(pointer);
 					copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
-					cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+					if (operand.pointer_register_index != IP)
+					{
+						cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+					}
+					else
+					{
+						operand_return.new_IP = new_halfword;
+					}
 				}
 			}
 			else
@@ -830,18 +843,19 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 				uint16_t new_data = get_data_from_halfword(new_halfword);
 				uint16_t old_data = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
 				new_data = (uint16_t)(old_data - new_data);
+				operand_return.hit_conditional_subtract = true;
+
 				if ((new_data >> 15) == 0 && new_data > 0)
 				{
 					new_halfword = put_data_into_halfword(new_data);
 
 					copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
-					cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+					operand_return.conditional_subtract_result |= false;
 
-					cpu->status_indicators[CONDITIONAL_SUBTRACT] |= false;
 				}
 				else
 				{
-					cpu->status_indicators[CONDITIONAL_SUBTRACT] = true;
+					operand_return.conditional_subtract_result |= true;
 				}
 			}
 		}
@@ -855,9 +869,17 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 			}
 
 			copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
-			cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+			if (operand.pointer_register_index != IP)
+			{
+				cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+			}
+			else
+			{
+				operand_return.new_IP = new_halfword;
+			}
 		}
 	}
+	return operand_return;
 }
 
 void instruction_fetch_loop(cpu_t *cpu)
