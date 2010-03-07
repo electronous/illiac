@@ -304,16 +304,16 @@ void set_data_in_byte(uint8_t data, byte_t *to)
 
 void set_data_in_halfword(uint16_t data, halfword_t *to)
 {
-	halfword_t new = put_data_into_halfword(data);
-	set_data_in_byte(get_data_from_byte(new.high), &(to->high));
-	set_data_in_byte(get_data_from_byte(new.low),  &(to->low));
+	halfword_t halfword = put_data_into_halfword(data);
+	set_data_in_byte(get_data_from_byte(halfword.high), &(to->high));
+	set_data_in_byte(get_data_from_byte(halfword.low),  &(to->low));
 }
 
 void set_data_in_word(uint32_t data, word_t *to)
 {
-	word_t new = put_data_into_word(data);
-	set_data_in_halfword(get_data_from_halfword(new.high), &(to->high));
-	set_data_in_halfword(get_data_from_halfword(new.low),  &(to->low));
+	word_t word = put_data_into_word(data);
+	set_data_in_halfword(get_data_from_halfword(word.high), &(to->high));
+	set_data_in_halfword(get_data_from_halfword(word.low),  &(to->low));
 }
 
 byte_t peek_operand_byte(const cpu_t *cpu)
