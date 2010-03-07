@@ -16,8 +16,8 @@ raw_address_t get_address_common(number_format_t p, const cpu_t *cpu)
 
 	assert(br_num < BR_SIZE);
 
-	return (raw_address_t)((cpu->br[br_num].start_page.high.data << 16) |
-						   (cpu->br[br_num].start_page.low.data  << 8));
+	return (raw_address_t)((get_data_from_byte(cpu->br[br_num].start_page.high) << 16) |
+						   (get_data_from_byte(cpu->br[br_num].start_page.low)  << 8));
 }
 
 raw_address_t get_address_from_pointer(number_format_t p, const cpu_t *cpu)
@@ -514,8 +514,8 @@ void one_byte(cpu_t *cpu)
 	byte_t operand;
 	pop_operand_byte(cpu);
 
-	operand.data = b(11111111);
-	operand.flag = true;
+	operand = put_data_into_byte(b(11111111));
+	set_flag_byte(&operand);
 	push_operand_byte(operand, cpu);
 }
 
@@ -650,7 +650,7 @@ void hcf(byte_t opcode, cpu_t *cpu)
 
 size_t decode_byte_t(byte_t byte)
 {
-	return (size_t)(byte.data | (byte.flag << 8));
+	return (size_t)(get_data_from_byte(byte) | (get_flag_from_byte(byte) << 8));
 }
 
 operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
@@ -682,14 +682,18 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 		operand.m[0] = get_byte_from_memory(m0_addr);
 		operand.m[1] = get_byte_from_memory(m1_addr);
 
+		// XXX: What about flags for operand.m[0]?
 		if (operand.indirect)
 		{
+			byte_t m0_byte;
+			byte_t m1_byte;
 			uint8_t second_pr_index = (uint8_t)(get_data_from_byte(operand.m[0]) >> 4);
 			assert(second_pr_index <= 15);
+
 			if (second_pr_index == 15)
 			{
-				operand.m[0].data = get_data_from_byte(peek_operand_halfword(cpu).high);
-				operand.m[1].data = get_data_from_byte(peek_operand_halfword(cpu).low);
+				m0_byte = peek_operand_halfword(cpu).high;
+				m1_byte = peek_operand_halfword(cpu).low;
 			}
 			else
 			{
@@ -702,11 +706,14 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 				{
 					m_halfword = cpu->pr[second_pr_index].pointer_value;
 				}
-				uint8_t m0_data = get_data_from_byte(m_halfword.high);
-				uint8_t m1_data = get_data_from_byte(m_halfword.low);
-				operand.m[0].data = m0_data;
-				operand.m[1].data = m1_data;
+				m0_byte = m_halfword.high;
+				m1_byte = m_halfword.low;
 			}
+
+			uint8_t m0_data = get_data_from_byte(m0_byte);
+			uint8_t m1_data = get_data_from_byte(m1_byte);
+			set_data_in_byte(m0_data, &(operand.m[0]));
+			set_data_in_byte(m1_data, &(operand.m[1]));
 		}
 	}
 
