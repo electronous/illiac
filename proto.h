@@ -9,7 +9,7 @@
 typedef struct
 {
 	uint8_t data;
-	bool    flag;
+	uint8_t flag;
 } byte_t;
 
 typedef struct
