@@ -397,11 +397,10 @@ void abs_short(cpu_t *cpu)
 {
 	halfword_t operand, new_stack_value;
 	uint16_t abs_data;
-	bool has_overflowed;
 
 	operand = pop_operand_halfword(cpu);
 	abs_data = get_data_from_halfword(operand);
-	if (abs_data >> 15)
+	if (abs_data > INT16_MAX)
 	{
 		abs_data = (uint16_t)(~abs_data + 1);
 	}
@@ -409,8 +408,7 @@ void abs_short(cpu_t *cpu)
 	new_stack_value = put_data_into_halfword(abs_data);
 	copy_halfword_flags(operand, &new_stack_value);
 
-	has_overflowed = abs_data >> 15;
-	if (has_overflowed)
+	if (abs_data > INT16_MAX)
 	{
 		set_flag_halfword(&new_stack_value, 0);
 	}
@@ -422,20 +420,18 @@ void abs_long(cpu_t *cpu)
 {
 	word_t operand, new_stack_value;
 	uint32_t abs_data;
-	bool has_overflowed;
 
 	operand = pop_operand_word(cpu);
 	abs_data = get_data_from_word(operand);
-	if (abs_data >> 31)
+	if (abs_data > INT32_MAX)
 	{
-		abs_data = ~abs_data + 1;
+		abs_data = (uint32_t)(~abs_data + 1);
 	}
 
 	new_stack_value = put_data_into_word(abs_data);
 	copy_word_flags(operand, &new_stack_value);
 
-	has_overflowed = abs_data >> 31;
-	if (has_overflowed)
+	if (abs_data > INT32_MAX)
 	{
 		set_flag_word(&new_stack_value, 0);
 	}
