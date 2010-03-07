@@ -255,7 +255,10 @@ void clear_flag_word(word_t *word, size_t byte_num)
 
 void or_byte_flags(byte_t from, byte_t *to)
 {
-	to->flag |= get_flag_from_byte(from);
+	if (get_flag_from_byte(*to) || get_flag_from_byte(from))
+	{
+		set_flag_byte(to);
+	}
 }
 
 void or_halfword_flags(halfword_t from, halfword_t *to)
@@ -272,7 +275,14 @@ void or_word_flags(word_t from, word_t *to)
 
 void copy_byte_flags(byte_t from, byte_t *to)
 {
-	to->flag = get_flag_from_byte(from);
+	if (get_flag_from_byte(from))
+	{
+		set_flag_byte(to);
+	}
+	else
+	{
+		clear_flag_byte(to);
+	}
 }
 
 void copy_halfword_flags(halfword_t from, halfword_t *to)
