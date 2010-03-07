@@ -275,17 +275,23 @@ halfword_t put_data_into_halfword(uint16_t data);
 
 word_t put_data_into_word(uint32_t data);
 
-void or_byte_flags(const byte_t *from, byte_t *to);
+void or_byte_flags(byte_t from, byte_t *to);
 
-void or_halfword_flags(const halfword_t *from, halfword_t *to);
+void or_halfword_flags(halfword_t from, halfword_t *to);
 
-void or_word_flags(const word_t *from, word_t *to);
+void or_word_flags(word_t from, word_t *to);
 
-void copy_byte_flags(const byte_t *from, byte_t *to);
+void copy_byte_flags(byte_t from, byte_t *to);
 
-void copy_halfword_flags(const halfword_t *from, halfword_t *to);
+void copy_halfword_flags(halfword_t from, halfword_t *to);
 
-void copy_word_flags(const word_t *from, word_t *to);
+void copy_word_flags(word_t from, word_t *to);
+
+void set_data_in_byte(uint8_t data, byte_t *to);
+
+void set_data_in_halfword(uint16_t data, halfword_t *to);
+
+void set_data_in_word(uint32_t data, word_t *to);
 
 byte_t peek_operand_byte(const cpu_t *cpu);
 
