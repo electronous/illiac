@@ -834,6 +834,7 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 					}
 					else
 					{
+						operand_return.changed_IP = true;
 						operand_return.new_IP = new_halfword;
 					}
 				}
@@ -850,12 +851,11 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 					new_halfword = put_data_into_halfword(new_data);
 
 					copy_halfword_flags(&(cpu->pr[operand.pointer_register_index].pointer_value), &new_halfword);
-					operand_return.conditional_subtract_result |= false;
-
+					operand_return.conditional_subtract_result = false;
 				}
 				else
 				{
-					operand_return.conditional_subtract_result |= true;
+					operand_return.conditional_subtract_result = true;
 				}
 			}
 		}
@@ -875,6 +875,7 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 			}
 			else
 			{
+				operand_return.changed_IP = true;
 				operand_return.new_IP = new_halfword;
 			}
 		}
@@ -1011,11 +1012,14 @@ int main(int argc, const char *argv[])
 	cpu_ctor(&cpu);
 
 	core_memory_ctor();
-	atexit(core_memory_dtor);
+	if (atexit(core_memory_dtor))
+	{
+		perror("could not register atexit for core_memory_dtor");
+	}
 
 	load_object_file(objfile);
 
 	instruction_fetch_loop(&cpu);
 
-	exit(EXIT_SUCCESS);
+	return EXIT_SUCCESS;
 }
