@@ -974,10 +974,6 @@ void load_object_file(const char *objfile)
 			perror("Bad file read");
 			exit(EXIT_FAILURE);
 		}
-		else
-		{
-			break;
-		}
 	}
 
 	if (fclose(fp))
