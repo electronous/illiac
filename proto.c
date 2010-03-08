@@ -276,7 +276,7 @@ void clear_flag_word(word_t *word, size_t byte_num)
 
 void or_byte_flags(byte_t from, byte_t *to)
 {
-	if (get_flag_from_byte(*to) || get_flag_from_byte(from))
+	if (get_flag_from_byte(from))
 	{
 		set_flag_byte(to);
 	}
@@ -713,7 +713,6 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 		operand.m[0] = get_byte_from_memory(m0_addr);
 		operand.m[1] = get_byte_from_memory(m1_addr);
 
-		/* XXX: What about flags for operand.m[0]? */
 		if (operand.indirect)
 		{
 			byte_t m0_byte;
@@ -995,10 +994,6 @@ void load_object_file(const char *objfile)
 		{
 			perror("Bad file read");
 			exit(EXIT_FAILURE);
-		}
-		else
-		{
-			break;
 		}
 	}
 
