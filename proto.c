@@ -712,18 +712,14 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 
 		operand.m[0] = get_byte_from_memory(m0_addr);
 		operand.m[1] = get_byte_from_memory(m1_addr);
-
 		if (operand.indirect)
 		{
-			byte_t m0_byte;
-			byte_t m1_byte;
-			pr_index_t second_pr_index = (pr_index_t)(get_data_from_byte(operand.m[0]) >> 4);
+			uint8_t second_pr_index = (uint8_t)(get_data_from_byte(operand.m[0]) >> 4);
 			assert(second_pr_index <= 15);
-
 			if (second_pr_index == 15)
 			{
-				m0_byte = peek_operand_halfword(cpu).high;
-				m1_byte = peek_operand_halfword(cpu).low;
+				operand.m[0].data = get_data_from_byte(peek_operand_halfword(cpu).high);
+				operand.m[1].data = get_data_from_byte(peek_operand_halfword(cpu).low);
 			}
 			else
 			{
@@ -736,14 +732,11 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 				{
 					m_halfword = cpu->pr[second_pr_index].pointer_value;
 				}
-				m0_byte = m_halfword.high;
-				m1_byte = m_halfword.low;
+				uint8_t m0_data = get_data_from_byte(m_halfword.high);
+				uint8_t m1_data = get_data_from_byte(m_halfword.low);
+				operand.m[0].data = m0_data;
+				operand.m[1].data = m1_data;
 			}
-
-			uint8_t m0_data = get_data_from_byte(m0_byte);
-			uint8_t m1_data = get_data_from_byte(m1_byte);
-			set_data_in_byte(m0_data, &(operand.m[0]));
-			set_data_in_byte(m1_data, &(operand.m[1]));
 		}
 	}
 
