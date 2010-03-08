@@ -47,17 +47,26 @@ typedef struct
 
 typedef size_t raw_address_t;
 
-#define PR_SIZE 14
-#define BR_SIZE 6
-#define STATUS_INDICATORS_SIZE 6
-
 #define NUM_BYTES (1 << 24)
 
-#define IP  0
-#define OSP 13
-#define ASP 14
+typedef enum
+{
+	BR_SIZE = 6
+} br_index_t;
 
-#define CONDITIONAL_SUBTRACT 0
+typedef enum
+{
+	IP,
+	OSP = 13,
+	ASP,
+	PR_SIZE = OSP + 1
+} pr_index_t;
+
+typedef enum
+{
+	CONDITIONAL_SUBTRACT,
+	STATUS_INDICATORS_SIZE = 6
+} si_index_t;
 
 typedef struct
 {
@@ -69,13 +78,13 @@ typedef struct
 
 typedef struct
 {
-	bool    is_long;
-	uint8_t pointer_register_index;
-	bool    pre_push;
-	bool    post_pop;
-	bool    indirect;
-	bool    last;
-	byte_t  m[2];
+	bool       is_long;
+	pr_index_t pointer_register_index;
+	bool       pre_push;
+	bool       post_pop;
+	bool       indirect;
+	bool       last;
+	byte_t     m[2];
 } operand_t;
 
 typedef struct

@@ -33,7 +33,7 @@ raw_address_t get_address_common(number_format_t p, const cpu_t *cpu)
 	uint8_t second_flag = (uint8_t)((get_flag_from_byte(p.pointer_value.high) << 1) & 0xFF);
 	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p.pointer_value.low)  << 0) & 0xFF);
 
-	uint8_t br_num = (uint8_t)(first_flag | second_flag | third_flag);
+	br_index_t br_num = (br_index_t)(first_flag | second_flag | third_flag);
 
 	assert(br_num < BR_SIZE);
 
@@ -691,7 +691,7 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 	uint8_t data = get_data_from_byte(operand_preamble);
 	operand_t operand = {
 		.is_long  = flag,
-		.pointer_register_index = (uint8_t)(data >> 4),
+		.pointer_register_index = (pr_index_t)(data >> 4),
 		.pre_push = (data >> 3) & 1,
 		.post_pop = (data >> 2) & 1,
 		.indirect = (data >> 1) & 1,
@@ -717,7 +717,7 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 		{
 			byte_t m0_byte;
 			byte_t m1_byte;
-			uint8_t second_pr_index = (uint8_t)(get_data_from_byte(operand.m[0]) >> 4);
+			pr_index_t second_pr_index = (pr_index_t)(get_data_from_byte(operand.m[0]) >> 4);
 			assert(second_pr_index <= 15);
 
 			if (second_pr_index == 15)
@@ -763,7 +763,7 @@ void handle_preslash(operand_t operand, cpu_t *cpu)
 	};
 	raw_address_t new_cell_addr = get_address_from_pointer(temp, cpu);
 
-	uint8_t pointer_register_index = operand.pointer_register_index;
+	pr_index_t pointer_register_index = operand.pointer_register_index;
 	assert(pointer_register_index < PR_SIZE);
 
 	halfword_t old_data = get_halfword_from_memory(new_cell_addr);
@@ -806,15 +806,17 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 
 	if (!operand.is_long && operand.indirect)
 	{
-		assert(operand.pointer_register_index < PR_SIZE);
-		raw_address_t indirect_address = get_address_from_pointer(cpu->pr[operand.pointer_register_index], cpu);
+		pr_index_t pointer_register_index = operand.pointer_register_index;
+		assert(pointer_register_index < PR_SIZE);
+
+		raw_address_t indirect_address = get_address_from_pointer(cpu->pr[pointer_register_index], cpu);
 
 		halfword_t indirect_memory = get_halfword_from_memory(indirect_address);
-		copy_halfword_flags(cpu->pr[operand.pointer_register_index].pointer_value, &indirect_memory);
+		copy_halfword_flags(cpu->pr[pointer_register_index].pointer_value, &indirect_memory);
 
 		if (operand.pointer_register_index != IP)
 		{
-			cpu->pr[operand.pointer_register_index].pointer_value = indirect_memory;
+			cpu->pr[pointer_register_index].pointer_value = indirect_memory;
 		}
 		else
 		{
@@ -824,6 +826,9 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 	}
 	else if (operand.is_long)
 	{
+		pr_index_t pointer_register_index = operand.pointer_register_index;
+		assert(pointer_register_index < PR_SIZE);
+
 		bool m0_flag = get_flag_from_byte(operand.m[0]);
 		bool m1_flag = get_flag_from_byte(operand.m[1]);
 
@@ -837,17 +842,17 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 			if (m1_flag)
 			{
 				uint16_t count = get_data_from_halfword(new_halfword);
-				uint16_t pointer = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+				uint16_t pointer = get_data_from_halfword(cpu->pr[pointer_register_index].pointer_value);
 				for (uint16_t i = 0; (i < count) && (pointer != 0); ++i)
 				{
-					raw_address_t indirect_address = get_address_from_pointer(cpu->pr[operand.pointer_register_index], cpu);
+					raw_address_t indirect_address = get_address_from_pointer(cpu->pr[pointer_register_index], cpu);
 					pointer = get_data_from_halfword(get_halfword_from_memory(indirect_address));
 
 					new_halfword = put_data_into_halfword(pointer);
-					copy_halfword_flags(cpu->pr[operand.pointer_register_index].pointer_value, &new_halfword);
-					if (operand.pointer_register_index != IP)
+					copy_halfword_flags(cpu->pr[pointer_register_index].pointer_value, &new_halfword);
+					if (pointer_register_index != IP)
 					{
-						cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+						cpu->pr[pointer_register_index].pointer_value = new_halfword;
 					}
 					else
 					{
@@ -859,7 +864,7 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 			else
 			{
 				uint16_t new_data = get_data_from_halfword(new_halfword);
-				uint16_t old_data = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+				uint16_t old_data = get_data_from_halfword(cpu->pr[pointer_register_index].pointer_value);
 				new_data = (uint16_t)(old_data - new_data);
 				operand_return.hit_conditional_subtract = true;
 
@@ -867,7 +872,7 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 				{
 					new_halfword = put_data_into_halfword(new_data);
 
-					copy_halfword_flags(cpu->pr[operand.pointer_register_index].pointer_value, &new_halfword);
+					copy_halfword_flags(cpu->pr[pointer_register_index].pointer_value, &new_halfword);
 					operand_return.conditional_subtract_result = false;
 				}
 				else
@@ -881,14 +886,14 @@ operand_return_t handle_operand(operand_t operand, cpu_t *cpu)
 			if (m1_flag)
 			{
 				uint16_t new_data = get_data_from_halfword(new_halfword);
-				uint16_t old_data = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+				uint16_t old_data = get_data_from_halfword(cpu->pr[pointer_register_index].pointer_value);
 				new_halfword = put_data_into_halfword((uint16_t)(old_data + new_data));
 			}
 
-			copy_halfword_flags(cpu->pr[operand.pointer_register_index].pointer_value, &new_halfword);
-			if (operand.pointer_register_index != IP)
+			copy_halfword_flags(cpu->pr[pointer_register_index].pointer_value, &new_halfword);
+			if (pointer_register_index != IP)
 			{
-				cpu->pr[operand.pointer_register_index].pointer_value = new_halfword;
+				cpu->pr[pointer_register_index].pointer_value = new_halfword;
 			}
 			else
 			{
@@ -905,7 +910,7 @@ void instruction_fetch_loop(cpu_t *cpu)
 	for (;;)
 	{
 		uint16_t new_pointer_addr = 0;
-		raw_address_t instruction  = get_address_from_pointer(cpu->pr[0], cpu);
+		raw_address_t instruction  = get_address_from_pointer(cpu->pr[IP], cpu);
 		byte_t opcode              = get_byte_from_memory(instruction);
 
 		operand_table_t decoded_opcode = opcodes[decode_byte_t(opcode)];
