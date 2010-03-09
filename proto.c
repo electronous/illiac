@@ -65,12 +65,10 @@ number_format_t get_pointer_register_from_memory(raw_address_t addr)
 {
 	assert(addr + 2 > addr);
 
-	number_format_t ret = {
+	return (number_format_t){
 		.pointer_link  = get_halfword_from_memory(addr),
 		.pointer_value = get_halfword_from_memory(addr + 2)
 	};
-
-	return ret;
 }
 
 byte_t get_byte_from_memory(raw_address_t addr)
@@ -83,22 +81,20 @@ halfword_t get_halfword_from_memory(raw_address_t addr)
 {
 	assert(addr + 1 > addr);
 
-	halfword_t halfword = {
+	return (halfword_t){
 		.high = get_byte_from_memory(addr),
 		.low  = get_byte_from_memory(addr + 1)
 	};
-	return halfword;
 }
 
 word_t get_word_from_memory(raw_address_t addr)
 {
 	assert(addr + 2 > addr);
 
-	word_t word = {
+	return (word_t){
 		.high = get_halfword_from_memory(addr),
 		.low  = get_halfword_from_memory(addr + 2),
 	};
-	return word;
 }
 
 void put_byte_into_memory(byte_t arg, raw_address_t addr)
@@ -144,29 +140,26 @@ uint32_t get_data_from_word(word_t word)
 
 byte_t put_data_into_byte(uint8_t data)
 {
-	byte_t byte = {
+	return (byte_t){
 		.data = data,
 		.flag = 0
 	};
-	return byte;
 }
 
 halfword_t put_data_into_halfword(uint16_t data)
 {
-	halfword_t halfword = {
+	return (halfword_t){
 		.high = put_data_into_byte((uint8_t)((data >> 8) & 0xFF)),
 		.low  = put_data_into_byte((uint8_t)(data        & 0xFF))
 	};
-	return halfword;
 }
 
 word_t put_data_into_word(uint32_t data)
 {
-	word_t word = {
+	return (word_t){
 		.high = put_data_into_halfword((uint16_t)((data >> 16) & 0xFFFF)),
 		.low  = put_data_into_halfword((uint16_t)(data         & 0xFFFF))
 	};
-	return word;
 }
 
 bool get_flag_from_byte(byte_t byte)
