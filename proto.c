@@ -715,21 +715,20 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 			assert(second_pr_index <= 15);
 			if (second_pr_index == 15)
 			{
+				/* Note that peek is idempotent, unlike other stack
+				 * 		operations, so we may do it twice. */
 				m0_data = get_data_from_byte(peek_operand_halfword(cpu).high);
 				m1_data = get_data_from_byte(peek_operand_halfword(cpu).low);
 			}
+			else if (second_pr_index == ASP)
+			{
+				m0_data = get_data_from_byte(cpu->pr_14.free_list_link.high);
+				m1_data = get_data_from_byte(cpu->pr_14.free_list_link.low);
+			}
 			else
 			{
-				if (second_pr_index == ASP)
-				{
-					m0_data = get_data_from_byte(cpu->pr_14.free_list_link.high);
-					m1_data = get_data_from_byte(cpu->pr_14.free_list_link.low);
-				}
-				else
-				{
-					m0_data = get_data_from_byte(cpu->pr[second_pr_index].pointer_value.high);
-					m1_data = get_data_from_byte(cpu->pr[second_pr_index].pointer_value.low);
-				}
+				m0_data = get_data_from_byte(cpu->pr[second_pr_index].pointer_value.high);
+				m1_data = get_data_from_byte(cpu->pr[second_pr_index].pointer_value.low);
 			}
 			set_data_in_byte(m0_data, &m0_byte);
 			set_data_in_byte(m1_data, &m1_byte);
