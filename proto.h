@@ -24,19 +24,24 @@ typedef struct
 	halfword_t low;
 } word_t;
 
+typedef enum
+{
+	BYTE_SIZE     = 1,
+	HALFWORD_SIZE = 2,
+	WORD_SIZE     = 4
+} data_size_t;
+
 typedef struct
 {
 	halfword_t pointer_link;
 	halfword_t pointer_value;
 } number_format_t;
-typedef number_format_t nf_t;
 
 typedef struct
 {
 	halfword_t consecutive_storage_link;
 	halfword_t free_list_link;
 } available_space_format_t;
-typedef available_space_format_t asf_t;
 
 typedef struct
 {
@@ -72,7 +77,7 @@ typedef struct
 {
 	number_format_t pr[PR_SIZE];
 	base_pointer_t br[BR_SIZE];
-	asf_t pr_14;
+	available_space_format_t pr_14;
 	bool status_indicators[STATUS_INDICATORS_SIZE];
 } cpu_t;
 
@@ -247,6 +252,8 @@ raw_address_t get_address_from_pointer(number_format_t p, const cpu_t *cpu);
 
 raw_address_t get_address_from_link(number_format_t p, const cpu_t *cpu);
 
+number_format_t follow_link(number_format_t p, const cpu_t *cpu);
+
 number_format_t get_pointer_register_from_memory(raw_address_t addr);
 
 byte_t get_byte_from_memory(raw_address_t addr);
@@ -361,7 +368,7 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu);
 
 void handle_preslash(operand_t operand, cpu_t *cpu);
 
-operand_return_t handle_operand(operand_t operand, cpu_t *cpu);
+operand_return_t canonicalize_operand(operand_t operand, cpu_t *cpu);
 
 void instruction_fetch_loop(cpu_t *cpu);
 
