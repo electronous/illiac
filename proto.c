@@ -8,7 +8,7 @@ static
 byte_t *core_memory;
 
 const
-operand_table_t opcodes[512] = {
+operand_table_t opcodes[NUM_OPCODES] = {
 	[ABS_SHORT     | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_short},
 	[ABS_LONG      | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_long},
 
@@ -29,9 +29,9 @@ operand_table_t opcodes[512] = {
 
 raw_address_t get_address_common(number_format_t p, const cpu_t *cpu)
 {
-	uint8_t third_flag  = (uint8_t)((get_flag_from_byte(p.pointer_link.low)   << 2) & 0xFF);
-	uint8_t second_flag = (uint8_t)((get_flag_from_byte(p.pointer_value.high) << 1) & 0xFF);
-	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p.pointer_value.low)  << 0) & 0xFF);
+	uint8_t third_flag  = (uint8_t)((get_flag_from_byte(p.pointer_link.low)   << 2u) & 0xFFu);
+	uint8_t second_flag = (uint8_t)((get_flag_from_byte(p.pointer_value.high) << 1u) & 0xFFu);
+	uint8_t first_flag  = (uint8_t)((get_flag_from_byte(p.pointer_value.low)  << 0u) & 0xFFu);
 
 	br_index_t br_num = (br_index_t)(first_flag | second_flag | third_flag);
 
@@ -420,19 +420,19 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 void abs_short(cpu_t *cpu)
 {
 	halfword_t operand, new_stack_value;
-	uint16_t abs_data;
+	int16_t abs_data;
 
 	operand = pop_operand_halfword(cpu);
-	abs_data = get_data_from_halfword(operand);
-	if (abs_data > INT16_MAX)
+	abs_data = (int16_t)get_data_from_halfword(operand);
+	if (abs_data < 0)
 	{
-		abs_data = (uint16_t)(~abs_data + 1);
+		abs_data = -abs_data;
 	}
 
-	new_stack_value = put_data_into_halfword(abs_data);
+	new_stack_value = put_data_into_halfword((uint16_t)abs_data);
 	copy_halfword_flags(operand, &new_stack_value);
 
-	if (abs_data > INT16_MAX)
+	if (abs_data < 0)
 	{
 		set_flag_halfword(&new_stack_value, 0);
 	}
@@ -443,19 +443,19 @@ void abs_short(cpu_t *cpu)
 void abs_long(cpu_t *cpu)
 {
 	word_t operand, new_stack_value;
-	uint32_t abs_data;
+	int32_t abs_data;
 
 	operand = pop_operand_word(cpu);
-	abs_data = get_data_from_word(operand);
-	if (abs_data > INT32_MAX)
+	abs_data = (int32_t)get_data_from_word(operand);
+	if (abs_data < 0)
 	{
-		abs_data = (uint32_t)(~abs_data + 1);
+		abs_data = -abs_data;
 	}
 
-	new_stack_value = put_data_into_word(abs_data);
+	new_stack_value = put_data_into_word((int32_t)abs_data);
 	copy_word_flags(operand, &new_stack_value);
 
-	if (abs_data > INT32_MAX)
+	if (abs_data < 0)
 	{
 		set_flag_word(&new_stack_value, 0);
 	}
@@ -716,7 +716,7 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 			if (second_pr_index == 15)
 			{
 				/* Note that peek is idempotent, unlike other stack
-				 * 		operations, so we may do it twice. */
+				 * operations, so we may do it twice. */
 				m0_data = get_data_from_byte(peek_operand_halfword(cpu).high);
 				m1_data = get_data_from_byte(peek_operand_halfword(cpu).low);
 			}
@@ -738,6 +738,10 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 	}
 
 	return operand;
+}
+
+void handle_postslash(operand_t operand, cpu_t *cpu)
+{
 }
 
 void handle_preslash(operand_t operand, cpu_t *cpu)
@@ -922,8 +926,11 @@ void instruction_fetch_loop(cpu_t *cpu)
 					raw_address_t arg_addr = get_address_from_pointer(arg_number_format, cpu);
 					operand_1 = decode_operand(arg_addr, cpu);
 					handle_preslash(operand_1, cpu);
+					handle_operand(operand_1, cpu);
+					decoded_opcode.opcode_impl.one_args(operand_1, cpu);
+					handle_postslash(operand_1, cpu);
 				}
-				/*decoded_opcode.opcode_impl.one_args(resister1, cpu);
+				/*
 				post_execute_operand(first_operand, cpu);
 				new_pointer_value = increment_ip(1 + ip_offset, cpu);*/
 				break;

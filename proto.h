@@ -47,7 +47,7 @@ typedef struct
 
 typedef size_t raw_address_t;
 
-#define NUM_BYTES (1 << 24)
+#define NUM_BYTES (1u << 24u)
 
 typedef enum
 {
@@ -104,12 +104,11 @@ typedef enum
 	MANY_OPS
 } num_operands_t;
 
-
 typedef union
 {
 	void (*zero_args)(cpu_t *);
-	void (*one_args)(size_t operand_reg, cpu_t *);
-	void (*two_args)(size_t operand_reg_1, size_t operand_reg_2, cpu_t *);
+	void (*one_args)(operand_t operand_reg, cpu_t *);
+	void (*two_args)(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
 } opcode_impl_t;
 
 typedef struct
@@ -118,14 +117,22 @@ typedef struct
 	opcode_impl_t opcode_impl;
 } operand_table_t;
 
-#define FLAGLESS (0 << 8)
-#define FLAGED   (1 << 8)
+typedef enum
+{
+	FLAGLESS = 0u << 8u,
+	FLAGED   = 1u << 8u
+} operand_flag_t;
 
 typedef enum
 {
 	ABS_SHORT  = b(10010100),
 	ABS_LONG
 } flaged_opcode_t;
+
+#define NUM_OPCODES (1u << 9u)
+
+extern const
+operand_table_t opcodes[NUM_OPCODES];
 
 typedef enum
 {
@@ -367,6 +374,3 @@ void core_memory_ctor(void);
 void core_memory_dtor(void);
 
 void load_object_file(const char *objfile);
-
-extern const
-operand_table_t opcodes[512];
