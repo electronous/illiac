@@ -494,7 +494,7 @@ void abs_short(cpu_t *cpu)
 	abs_data = (int16_t)get_data_from_halfword(operand);
 	if (abs_data < 0)
 	{
-		abs_data = -abs_data;
+		abs_data = (int16_t)-abs_data;
 	}
 
 	new_stack_value = put_data_into_halfword((uint16_t)abs_data);
@@ -1033,13 +1033,16 @@ void instruction_fetch_loop(cpu_t *cpu)
 				num_operands = 2;
 				break;
 			case BIT_OPS:
-				set_data_in_halfword(increment_ip(BYTE_SIZE, cpu), &(arg_number_format.pointer_value));
-				raw_address_t arg_addr = get_address_from_pointer(arg_number_format, cpu);
-				bitmask = get_byte_from_memory(arg_addr);
+				{
+					set_data_in_halfword(increment_ip(BYTE_SIZE, cpu), &(arg_number_format.pointer_value));
+					raw_address_t new_ip = get_address_from_pointer(arg_number_format, cpu);
+					bitmask = get_byte_from_memory(new_ip);
 
-				set_data_in_halfword(arg_addr, &(cpu->pr[IP].pointer_value));
+					set_data_in_halfword(new_ip, &(arg_number_format.pointer_value));
+				}
 
 				num_operands = 1;
+				break;
 			default:
 				hcf(opcode, cpu);
 				break;

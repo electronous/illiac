@@ -381,6 +381,8 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu);
 
 void handle_preslash(operand_t operand, cpu_t *cpu);
 
+void handle_postslash(operand_t operand, cpu_t *cpu);
+
 operand_return_t canonicalize_operand(operand_t operand, cpu_t *cpu);
 
 void instruction_fetch_loop(cpu_t *cpu);
