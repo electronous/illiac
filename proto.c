@@ -9,6 +9,9 @@ byte_t *core_memory;
 
 const
 operand_table_t opcodes[NUM_OPCODES] = {
+	[IF            | FLAGED]   = {.num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch},
+	[IF_NOT        | FLAGED]   = {.num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch_not},
+
 	[ABS_SHORT     | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_short},
 	[ABS_LONG      | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_long},
 
@@ -422,6 +425,66 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 	push_operand_halfword(arg.low,  cpu);
 }
 
+bool branch(byte_t byte, cpu_t *cpu)
+{
+	uint8_t data = get_data_from_byte(byte);
+	if (cpu->status_indicators[CONDITIONAL_SUBTRACT] && (data & (1 << CONDITIONAL_SUBTRACT)))
+	{
+		return true;
+	}
+	if (cpu->status_indicators[OVERFLOW] && (data & (1 << OVERFLOW)))
+	{
+		return true;
+	}
+	if (cpu->status_indicators[GREATER_THAN] && (data & (1 << GREATER_THAN)))
+	{
+		return true;
+	}
+	if (cpu->status_indicators[EQUAL] && (data & (1 << EQUAL)))
+	{
+		return true;
+	}
+	if (cpu->status_indicators[LESS_THAN] && (data & (1 << LESS_THAN)))
+	{
+		return true;
+	}
+	if (cpu->status_indicators[FLAGS_MATCH] && (data & (1 << FLAGS_MATCH)))
+	{
+		return true;
+	}
+	return false;
+}
+
+bool branch_not(byte_t byte, cpu_t *cpu)
+{
+	uint8_t data = get_data_from_byte(byte);
+	if (!(cpu->status_indicators[CONDITIONAL_SUBTRACT]) && (data & (1 << CONDITIONAL_SUBTRACT)))
+	{
+		return true;
+	}
+	if (!(cpu->status_indicators[OVERFLOW]) && (data & (1 << OVERFLOW)))
+	{
+		return true;
+	}
+	if (!(cpu->status_indicators[GREATER_THAN]) && (data & (1 << GREATER_THAN)))
+	{
+		return true;
+	}
+	if (!(cpu->status_indicators[EQUAL]) && (data & (1 << EQUAL)))
+	{
+		return true;
+	}
+	if (!(cpu->status_indicators[LESS_THAN]) && (data & (1 << LESS_THAN)))
+	{
+		return true;
+	}
+	if (!(cpu->status_indicators[FLAGS_MATCH]) && (data & (1 << FLAGS_MATCH)))
+	{
+		return true;
+	}
+	return false;
+}
+
 void abs_short(cpu_t *cpu)
 {
 	halfword_t operand, new_stack_value;
@@ -437,8 +500,10 @@ void abs_short(cpu_t *cpu)
 	new_stack_value = put_data_into_halfword((uint16_t)abs_data);
 	copy_halfword_flags(operand, &new_stack_value);
 
+	cpu->status_indicators[OVERFLOW] = false;
 	if (abs_data < 0)
 	{
+		cpu->status_indicators[OVERFLOW] = true;
 		set_flag_halfword(&new_stack_value, 0);
 	}
 
@@ -460,8 +525,10 @@ void abs_long(cpu_t *cpu)
 	new_stack_value = put_data_into_word((int32_t)abs_data);
 	copy_word_flags(operand, &new_stack_value);
 
+	cpu->status_indicators[OVERFLOW] = false;
 	if (abs_data < 0)
 	{
+		cpu->status_indicators[OVERFLOW] = true;
 		set_flag_word(&new_stack_value, 0);
 	}
 
@@ -833,7 +900,8 @@ void handle_preslash(operand_t operand, cpu_t *cpu)
 operand_return_t canonicalize_operand(operand_t operand, cpu_t *cpu)
 {
 	operand_return_t operand_return = {
-		.hit_conditional_subtract = false,
+		.hit_conditional = false,
+		.conditional_subtract_result = false,
 		.changed_IP = false,
 	};
 
@@ -899,8 +967,8 @@ operand_return_t canonicalize_operand(operand_t operand, cpu_t *cpu)
 				uint16_t new_data = get_data_from_halfword(new_halfword);
 				uint16_t old_data = get_data_from_halfword(cpu->pr[pointer_register_index].pointer_value);
 				new_data = (uint16_t)(old_data - new_data);
-				operand_return.hit_conditional_subtract = true;
 
+				operand_return.hit_conditional = true;
 				if ((new_data >> 15) == 0 && new_data > 0)
 				{
 					new_halfword = put_data_into_halfword(new_data);
@@ -948,54 +1016,141 @@ void instruction_fetch_loop(cpu_t *cpu)
 
 		operand_table_t decoded_opcode = opcodes[decode_byte_t(opcode)];
 
+		number_format_t arg_number_format = cpu->pr[IP];
+
+		byte_t bitmask;
+
+		size_t num_operands = 0;
 		switch (decoded_opcode.num_operands)
 		{
-			operand_t operand_1;
-			operand_t operand_2;
-
 			case ZERO_OPS:
-				decoded_opcode.opcode_impl.zero_args(cpu);
-				new_pointer_addr = increment_ip(BYTE_SIZE, cpu);
+				num_operands = 0;
 				break;
 			case ONE_OPS:
-				{
-					number_format_t arg_number_format = cpu->pr[IP];
-					set_data_in_halfword(increment_ip(BYTE_SIZE, cpu), &(arg_number_format.pointer_value));
-
-					raw_address_t arg_addr = get_address_from_pointer(arg_number_format, cpu);
-					operand_1 = decode_operand(arg_addr, cpu);
-
-					handle_preslash(operand_1, cpu);
-					operand_return_t operand_ret = canonicalize_operand(operand_1, cpu);
-
-					uint16_t ip_offset;
-					if (operand_1.is_long)
-					{
-						ip_offset = 3;
-					}
-					else
-					{
-						ip_offset = 1;
-					}
-
-					new_pointer_addr = increment_ip(BYTE_SIZE + ip_offset, cpu);
-					if (!operand_ret.hit_conditional_subtract || !operand_ret.conditional_subtract_result)
-					{
-						decoded_opcode.opcode_impl.one_args(operand_1, cpu);
-						if (operand_ret.changed_IP)
-						{
-							new_pointer_addr = get_data_from_halfword(operand_ret.new_IP);
-						}
-					}
-
-					handle_postslash(operand_1, cpu);
-				}
+				num_operands = 1;
 				break;
+			case TWO_OPS:
+				num_operands = 2;
+				break;
+			case BIT_OPS:
+				set_data_in_halfword(increment_ip(BYTE_SIZE, cpu), &(arg_number_format.pointer_value));
+				raw_address_t arg_addr = get_address_from_pointer(arg_number_format, cpu);
+				bitmask = get_byte_from_memory(arg_addr);
+
+				set_data_in_halfword(arg_addr, &(cpu->pr[IP].pointer_value));
+
+				num_operands = 1;
 			default:
 				hcf(opcode, cpu);
+				break;
+		}
+
+		operand_t *operands = (operand_t *) malloc(sizeof(*operands) * num_operands);
+		if (operands == NULL)
+		{
+			perror("error allocating operands");
+			exit(EXIT_FAILURE);
+		}
+
+		for (size_t i = 0; i < num_operands; i++)
+		{
+			set_data_in_halfword(increment_ip(BYTE_SIZE, cpu), &(arg_number_format.pointer_value));
+			raw_address_t arg_addr = get_address_from_pointer(arg_number_format, cpu);
+			operands[i] = decode_operand(arg_addr, cpu);
+		}
+
+		uint16_t ip_offset = 0;
+
+		for (size_t i = 0; i < num_operands; i++)
+		{
+			handle_preslash(operands[i], cpu);
+		}
+
+		operand_return_t result = {
+			.conditional_subtract_result = false,
+			.changed_IP = false
+		};
+
+		bool cond_result_or = false;
+
+		for (size_t i = 0; i < num_operands; i++)
+		{
+			operand_return_t operand_ret = canonicalize_operand(operands[i], cpu);
+
+			if (operands[i].is_long)
+			{
+				ip_offset += 3;
+			}
+			else
+			{
+				ip_offset += 1;
+			}
+
+			cond_result_or |= result.hit_conditional;
+
+			if (result.conditional_subtract_result == false)
+			{
+				result.conditional_subtract_result = operand_ret.conditional_subtract_result;
+			}
+
+			if (operand_ret.changed_IP == true)
+			{
+				result.changed_IP = operand_ret.changed_IP;
+				result.new_IP = operand_ret.new_IP;
+			}
+		}
+
+		if (cond_result_or)
+		{
+			cpu->status_indicators[CONDITIONAL_SUBTRACT] = result.conditional_subtract_result;
+		}
+
+		bool did_branch = false;
+		if (result.conditional_subtract_result == false)
+		{
+			switch (decoded_opcode.num_operands)
+			{
+				case ZERO_OPS:
+					decoded_opcode.opcode_impl.zero_args(cpu);
+					break;
+				case ONE_OPS:
+					decoded_opcode.opcode_impl.one_args(operands[0], cpu);
+					break;
+				case TWO_OPS:
+					assert(!(operands[0].is_long && operands[1].is_long));
+					decoded_opcode.opcode_impl.two_args(operands[0], operands[1], cpu);
+					break;
+				case BIT_OPS:
+					did_branch = decoded_opcode.opcode_impl.bit_args(bitmask, cpu);
+					break;
+				default:
+					hcf(opcode, cpu);
+					break;
+			}
+		}
+
+		for (size_t i = 0; i < num_operands; i++)
+		{
+			handle_postslash(operands[i], cpu);
+		}
+
+		new_pointer_addr = increment_ip(BYTE_SIZE * (num_operands + 1) + ip_offset, cpu);
+		if (result.conditional_subtract_result == false)
+		{
+			assert(!result.changed_IP && !did_branch);
+			if (result.changed_IP)
+			{
+				new_pointer_addr = get_data_from_halfword(result.new_IP);
+			}
+
+			if (did_branch)
+			{
+				new_pointer_addr = get_data_from_halfword(cpu->pr[operands[0].pointer_register_index].pointer_value);
+			}
 		}
 
 		set_data_in_halfword(new_pointer_addr, &(cpu->pr[IP].pointer_value));
+		free(operands);
 	}
 }
 

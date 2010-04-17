@@ -70,7 +70,12 @@ typedef enum
 typedef enum
 {
 	CONDITIONAL_SUBTRACT,
-	STATUS_INDICATORS_SIZE = 6
+	OVERFLOW,
+	GREATER_THAN,
+	EQUAL,
+	LESS_THAN,
+	FLAGS_MATCH,
+	STATUS_INDICATORS_SIZE
 } si_index_t;
 
 typedef struct
@@ -94,7 +99,7 @@ typedef struct
 
 typedef struct
 {
-	bool hit_conditional_subtract;
+	bool hit_conditional;
 	bool conditional_subtract_result;
 	bool changed_IP;
 	halfword_t new_IP;
@@ -106,7 +111,8 @@ typedef enum
 	ZERO_OPS,
 	ONE_OPS,
 	TWO_OPS,
-	MANY_OPS
+	MANY_OPS,
+	BIT_OPS
 } num_operands_t;
 
 typedef union
@@ -114,6 +120,7 @@ typedef union
 	void (*zero_args)(cpu_t *);
 	void (*one_args)(operand_t operand_reg, cpu_t *);
 	void (*two_args)(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+	bool (*bit_args)(byte_t byte, cpu_t *);
 } opcode_impl_t;
 
 typedef struct
@@ -130,6 +137,8 @@ typedef enum
 
 typedef enum
 {
+	IF         = b(00110100),
+	IF_NOT,
 	ABS_SHORT  = b(10010100),
 	ABS_LONG
 } flaged_opcode_t;
@@ -331,6 +340,10 @@ void push_operand_byte(byte_t arg, cpu_t *cpu);
 void push_operand_halfword(halfword_t arg, cpu_t *cpu);
 
 void push_operand_word(word_t arg, cpu_t *cpu);
+
+bool branch(byte_t byte, cpu_t *cpu);
+
+bool branch_not(byte_t byte, cpu_t *cpu);
 
 void abs_short(cpu_t *cpu);
 
