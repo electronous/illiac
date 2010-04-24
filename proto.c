@@ -1130,19 +1130,18 @@ operand_return_t canonicalize_operand(operand_t operand, cpu_t *cpu)
 				uint16_t new_data = get_data_from_halfword(new_halfword);
 				uint16_t old_data = get_data_from_halfword(cpu->pr[pointer_register_index].pointer_value);
 				new_data = (uint16_t)(old_data - new_data);
+				new_halfword = put_data_into_halfword(new_data);
 
 				operand_return.hit_conditional = true;
 				if ((new_data >> 15) == 0 && new_data > 0)
 				{
+					copy_halfword_flags(cpu->pr[pointer_register_index].pointer_value, &new_halfword);
 					if (pointer_register_index != IP)
 					{
-						set_data_in_halfword(new_data, &(cpu->pr[pointer_register_index].pointer_value));
+						cpu->pr[pointer_register_index].pointer_value = new_halfword;
 					}
 					else
 					{
-						new_halfword = cpu->pr[pointer_register_index].pointer_value;
-						set_data_in_halfword(new_data, &new_halfword);
-
 						operand_return.changed_IP = true;
 						operand_return.new_IP = new_halfword;
 					}
