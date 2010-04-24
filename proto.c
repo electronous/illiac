@@ -896,7 +896,7 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 		if (operand.indirect)
 		{
 			uint8_t m0_data, m1_data;
-			pr_index_t second_pr_index = (pr_index_t)(get_data_from_byte(operand.m[0]) >> 4);
+			pr_index_t second_pr_index = (pr_index_t)(get_data_from_byte(m0_byte) >> 4);
 			assert(second_pr_index <= 15);
 			if (second_pr_index == 15)
 			{
