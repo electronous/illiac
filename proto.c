@@ -432,8 +432,9 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 	push_operand_halfword(arg.low,  cpu);
 }
 
-void assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
+bool assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 {
+	bool changed_pr0 = false;
 	if (operand_reg_1.last || operand_reg_2.last)
 	{
 		uint16_t source_data;
@@ -450,6 +451,10 @@ void assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 		if (operand_reg_1.last)
 		{
 			set_data_in_halfword(source_data, &(cpu->pr[operand_reg_1.pointer_register_index].pointer_value));
+			if (operand_reg_1.pointer_register_index == IP)
+			{
+				changed_pr0 = true;
+			}
 		}
 		else
 		{
@@ -467,10 +472,12 @@ void assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 		byte_t source_data = get_byte_from_memory(source_addr);
 		put_byte_into_memory(source_data, dest_addr);
 	}
+	return changed_pr0;
 }
 
-void assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
+bool assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 {
+	bool changed_pr0 = false;
 	if (operand_reg_1.last || operand_reg_2.last)
 	{
 		uint16_t source_data;
@@ -487,6 +494,10 @@ void assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cp
 		if (operand_reg_1.last)
 		{
 			set_data_in_halfword(source_data, &(cpu->pr[operand_reg_1.pointer_register_index].pointer_link));
+			if (operand_reg_1.pointer_register_index == IP)
+			{
+				changed_pr0 = true;
+			}
 		}
 		else
 		{
@@ -504,10 +515,12 @@ void assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cp
 		halfword_t source_data = get_halfword_from_memory(source_addr);
 		put_halfword_into_memory(source_data, dest_addr);
 	}
+	return changed_pr0;
 }
 
-void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
+bool assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 {
+	bool changed_pr0 = false;
 	if (operand_reg_1.last || operand_reg_2.last)
 	{
 		word_t source_data;
@@ -526,6 +539,10 @@ void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 		{
 			cpu->pr[operand_reg_1.pointer_register_index].pointer_link  = source_data.high;
 			cpu->pr[operand_reg_1.pointer_register_index].pointer_value = source_data.low;
+			if (operand_reg_1.pointer_register_index == IP)
+			{
+				changed_pr0 = true;
+			}
 		}
 		else
 		{
@@ -541,73 +558,91 @@ void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 		word_t source_data = get_word_from_memory(source_addr);
 		put_word_into_memory(source_data, dest_addr);
 	}
+	return changed_pr0;
 }
 
-void nop(cpu_t *cpu)
+bool nop(cpu_t *cpu)
 {
+	return false;
 }
 
-bool branch(byte_t byte, cpu_t *cpu)
+bool branch(byte_t byte, operand_t operand, cpu_t *cpu)
 {
+	bool did_branch = false;
 	uint8_t data = get_data_from_byte(byte);
 	if (cpu->status_indicators[CONDITIONAL_SUBTRACT] && (data & (1 << CONDITIONAL_SUBTRACT)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (cpu->status_indicators[OVERFLOW] && (data & (1 << OVERFLOW)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (cpu->status_indicators[GREATER_THAN] && (data & (1 << GREATER_THAN)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (cpu->status_indicators[EQUAL] && (data & (1 << EQUAL)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (cpu->status_indicators[LESS_THAN] && (data & (1 << LESS_THAN)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (cpu->status_indicators[FLAGS_MATCH] && (data & (1 << FLAGS_MATCH)))
 	{
+		did_branch = true;
+	}
+
+	if (did_branch)
+	{
+		uint16_t new_pointer_addr = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+		set_data_in_halfword(new_pointer_addr, &(cpu->pr[IP].pointer_value));
 		return true;
 	}
 	return false;
 }
 
-bool branch_not(byte_t byte, cpu_t *cpu)
+bool branch_not(byte_t byte, operand_t operand, cpu_t *cpu)
 {
+	bool did_branch = false;
 	uint8_t data = get_data_from_byte(byte);
 	if (!(cpu->status_indicators[CONDITIONAL_SUBTRACT]) && (data & (1 << CONDITIONAL_SUBTRACT)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (!(cpu->status_indicators[OVERFLOW]) && (data & (1 << OVERFLOW)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (!(cpu->status_indicators[GREATER_THAN]) && (data & (1 << GREATER_THAN)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (!(cpu->status_indicators[EQUAL]) && (data & (1 << EQUAL)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (!(cpu->status_indicators[LESS_THAN]) && (data & (1 << LESS_THAN)))
 	{
-		return true;
+		did_branch = true;
 	}
 	if (!(cpu->status_indicators[FLAGS_MATCH]) && (data & (1 << FLAGS_MATCH)))
 	{
+		did_branch = true;
+	}
+
+	if (did_branch)
+	{
+		uint16_t new_pointer_addr = get_data_from_halfword(cpu->pr[operand.pointer_register_index].pointer_value);
+		set_data_in_halfword(new_pointer_addr, &(cpu->pr[IP].pointer_value));
 		return true;
 	}
 	return false;
 }
 
-void abs_short(cpu_t *cpu)
+bool abs_short(cpu_t *cpu)
 {
 	halfword_t operand, new_stack_value;
 	int16_t abs_data;
@@ -630,9 +665,10 @@ void abs_short(cpu_t *cpu)
 	}
 
 	push_operand_halfword(new_stack_value, cpu);
+	return false;
 }
 
-void abs_long(cpu_t *cpu)
+bool abs_long(cpu_t *cpu)
 {
 	word_t operand, new_stack_value;
 	int32_t abs_data;
@@ -655,9 +691,10 @@ void abs_long(cpu_t *cpu)
 	}
 
 	push_operand_word(new_stack_value, cpu);
+	return false;
 }
 
-void add_short(cpu_t *cpu)
+bool add_short(cpu_t *cpu)
 {
 	halfword_t operand1, operand2, new_stack_value;
 	int16_t data1, data2, result;
@@ -690,9 +727,10 @@ void add_short(cpu_t *cpu)
 	}
 
 	push_operand_halfword(new_stack_value, cpu);
+	return false;
 }
 
-void add_long(cpu_t *cpu)
+bool add_long(cpu_t *cpu)
 {
 	word_t operand1, operand2, new_stack_value;
 	int32_t data1, data2, result;
@@ -725,9 +763,10 @@ void add_long(cpu_t *cpu)
 	}
 
 	push_operand_word(new_stack_value, cpu);
+	return false;
 }
 
-void one_byte(cpu_t *cpu)
+bool one_byte(cpu_t *cpu)
 {
 	byte_t operand;
 	pop_operand_byte(cpu);
@@ -735,51 +774,58 @@ void one_byte(cpu_t *cpu)
 	operand = put_data_into_byte(b(11111111));
 	set_flag_byte(&operand);
 	push_operand_byte(operand, cpu);
+	return false;
 }
 
-void dup_byte(cpu_t *cpu)
+bool dup_byte(cpu_t *cpu)
 {
 	byte_t operand;
 
 	operand = pop_operand_byte(cpu);
 	push_operand_byte(operand, cpu);
 	push_operand_byte(operand, cpu);
+	return false;
 }
 
-void dup_halfword(cpu_t *cpu)
+bool dup_halfword(cpu_t *cpu)
 {
 	halfword_t operand;
 
 	operand = pop_operand_halfword(cpu);
 	push_operand_halfword(operand, cpu);
 	push_operand_halfword(operand, cpu);
+	return false;
 }
 
-void dup_word(cpu_t *cpu)
+bool dup_word(cpu_t *cpu)
 {
 	word_t operand;
 
 	operand = pop_operand_word(cpu);
 	push_operand_word(operand, cpu);
 	push_operand_word(operand, cpu);
+	return false;
 }
 
-void sluff_byte(cpu_t *cpu)
+bool sluff_byte(cpu_t *cpu)
 {
 	pop_operand_byte(cpu);
+	return false;
 }
 
-void sluff_halfword(cpu_t *cpu)
+bool sluff_halfword(cpu_t *cpu)
 {
 	pop_operand_halfword(cpu);
+	return false;
 }
 
-void sluff_word(cpu_t *cpu)
+bool sluff_word(cpu_t *cpu)
 {
 	pop_operand_word(cpu);
+	return false;
 }
 
-void xch_byte(cpu_t *cpu)
+bool xch_byte(cpu_t *cpu)
 {
 	byte_t operand1, operand2;
 
@@ -787,9 +833,10 @@ void xch_byte(cpu_t *cpu)
 	operand2 = pop_operand_byte(cpu);
 	push_operand_byte(operand1, cpu);
 	push_operand_byte(operand2, cpu);
+	return false;
 }
 
-void xch_halfword(cpu_t *cpu)
+bool xch_halfword(cpu_t *cpu)
 {
 	halfword_t operand1, operand2;
 
@@ -797,9 +844,10 @@ void xch_halfword(cpu_t *cpu)
 	operand2 = pop_operand_halfword(cpu);
 	push_operand_halfword(operand1, cpu);
 	push_operand_halfword(operand2, cpu);
+	return false;
 }
 
-void xch_word(cpu_t *cpu)
+bool xch_word(cpu_t *cpu)
 {
 	word_t operand1, operand2;
 
@@ -807,9 +855,10 @@ void xch_word(cpu_t *cpu)
 	operand2 = pop_operand_word(cpu);
 	push_operand_word(operand1, cpu);
 	push_operand_word(operand2, cpu);
+	return false;
 }
 
-void hcf(byte_t opcode, cpu_t *cpu)
+bool hcf(byte_t opcode, cpu_t *cpu)
 {
 	size_t i;
 	uint16_t temp16;
@@ -864,6 +913,7 @@ void hcf(byte_t opcode, cpu_t *cpu)
 	}
 	printf("\n");
 	exit(EXIT_FAILURE);
+	return true;
 }
 
 size_t decode_byte_t(byte_t byte)
@@ -1243,20 +1293,20 @@ void instruction_fetch_loop(cpu_t *cpu)
 			switch (decoded_opcode.num_operands)
 			{
 				case ZERO_OPS:
-					decoded_opcode.opcode_impl.zero_args(cpu);
+					did_branch = decoded_opcode.opcode_impl.zero_args(cpu);
 					break;
 				case ONE_OPS:
-					decoded_opcode.opcode_impl.one_args(operands[0], cpu);
+					did_branch = decoded_opcode.opcode_impl.one_args(operands[0], cpu);
 					break;
 				case TWO_OPS:
 					assert(!(operands[0].is_long && operands[1].is_long));
-					decoded_opcode.opcode_impl.two_args(operands[0], operands[1], cpu);
+					did_branch = decoded_opcode.opcode_impl.two_args(operands[0], operands[1], cpu);
 					break;
 				case BIT_OPS:
-					did_branch = decoded_opcode.opcode_impl.bit_args(bitmask, cpu);
+					did_branch = decoded_opcode.opcode_impl.bit_args(bitmask, operands[0], cpu);
 					break;
 				default:
-					hcf(opcode, cpu);
+					did_branch = hcf(opcode, cpu);
 					break;
 			}
 		}
@@ -1269,7 +1319,6 @@ void instruction_fetch_loop(cpu_t *cpu)
 		uint16_t new_pointer_addr = increment_ip(cur_ip_addr - instruction, cpu);
 		if (result.conditional_subtract_result == false)
 		{
-			assert(!result.changed_IP && !did_branch);
 			if (result.changed_IP)
 			{
 				new_pointer_addr = get_data_from_halfword(result.new_IP);
@@ -1277,7 +1326,7 @@ void instruction_fetch_loop(cpu_t *cpu)
 
 			if (did_branch)
 			{
-				new_pointer_addr = get_data_from_halfword(cpu->pr[operands[0].pointer_register_index].pointer_value);
+				new_pointer_addr = get_data_from_halfword(cpu->pr[IP].pointer_value);
 			}
 		}
 

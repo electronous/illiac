@@ -117,10 +117,10 @@ typedef enum
 
 typedef union
 {
-	void (*zero_args)(cpu_t *);
-	void (*one_args)(operand_t operand_reg, cpu_t *);
-	void (*two_args)(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
-	bool (*bit_args)(byte_t byte, cpu_t *);
+	bool (*zero_args)(cpu_t *);
+	bool (*one_args)(operand_t operand_reg, cpu_t *);
+	bool (*two_args)(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+	bool (*bit_args)(byte_t byte, operand_t operand_reg, cpu_t *);
 } opcode_impl_t;
 
 typedef struct
@@ -347,47 +347,47 @@ void push_operand_halfword(halfword_t arg, cpu_t *cpu);
 
 void push_operand_word(word_t arg, cpu_t *cpu);
 
-void assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+bool assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
 
-void assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+bool assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
 
-void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+bool assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
 
-void nop(cpu_t *);
+bool nop(cpu_t *);
 
-bool branch(byte_t byte, cpu_t *cpu);
+bool branch(byte_t byte, operand_t operand, cpu_t *cpu);
 
-bool branch_not(byte_t byte, cpu_t *cpu);
+bool branch_not(byte_t byte, operand_t operand, cpu_t *cpu);
 
-void abs_short(cpu_t *cpu);
+bool abs_short(cpu_t *cpu);
 
-void abs_long(cpu_t *cpu);
+bool abs_long(cpu_t *cpu);
 
-void add_short(cpu_t *cpu);
+bool add_short(cpu_t *cpu);
 
-void add_long(cpu_t *cpu);
+bool add_long(cpu_t *cpu);
 
-void one_byte(cpu_t *cpu);
+bool one_byte(cpu_t *cpu);
 
-void sluff_byte(cpu_t *cpu);
+bool sluff_byte(cpu_t *cpu);
 
-void sluff_halfword(cpu_t *cpu);
+bool sluff_halfword(cpu_t *cpu);
 
-void sluff_word(cpu_t *cpu);
+bool sluff_word(cpu_t *cpu);
 
-void dup_byte(cpu_t *cpu);
+bool dup_byte(cpu_t *cpu);
 
-void dup_halfword(cpu_t *cpu);
+bool dup_halfword(cpu_t *cpu);
 
-void dup_word(cpu_t *cpu);
+bool dup_word(cpu_t *cpu);
 
-void xch_byte(cpu_t *cpu);
+bool xch_byte(cpu_t *cpu);
 
-void xch_halfword(cpu_t *cpu);
+bool xch_halfword(cpu_t *cpu);
 
-void xch_word(cpu_t *cpu);
+bool xch_word(cpu_t *cpu);
 
-void hcf(byte_t opcode, cpu_t *cpu);
+bool hcf(byte_t opcode, cpu_t *cpu);
 
 size_t decode_byte_t(byte_t byte);
 
