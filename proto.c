@@ -1077,9 +1077,7 @@ operand_return_t canonicalize_operand(operand_t operand, cpu_t *cpu)
 				operand_return.hit_conditional = true;
 				if ((new_data >> 15) == 0 && new_data > 0)
 				{
-					new_halfword = put_data_into_halfword(new_data);
-
-					copy_halfword_flags(cpu->pr[pointer_register_index].pointer_value, &new_halfword);
+					set_data_in_halfword(new_data, &(cpu->pr[pointer_register_index].pointer_value));
 					operand_return.conditional_subtract_result = false;
 				}
 				else
