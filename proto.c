@@ -1311,11 +1311,6 @@ void instruction_fetch_loop(cpu_t *cpu)
 			}
 		}
 
-		for (size_t i = 0; i < num_operands; i++)
-		{
-			handle_postslash(operands[i], cpu);
-		}
-
 		uint16_t new_pointer_addr = increment_ip(cur_ip_addr - instruction, cpu);
 		if (result.conditional_subtract_result == false)
 		{
@@ -1331,6 +1326,12 @@ void instruction_fetch_loop(cpu_t *cpu)
 		}
 
 		set_data_in_halfword(new_pointer_addr, &(cpu->pr[IP].pointer_value));
+
+		for (size_t i = 0; i < num_operands; i++)
+		{
+			handle_postslash(operands[i], cpu);
+		}
+
 		free(operands);
 	}
 }
