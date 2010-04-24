@@ -766,20 +766,11 @@ operand_t decode_operand(raw_address_t operand_address, const cpu_t *cpu)
 
 	if (operand.is_long)
 	{
-		number_format_t m0_number_format = cpu->pr[IP];
-		set_data_in_halfword(increment_ip(2, cpu), &(m0_number_format.pointer_value));
+		raw_address_t m0_addr = operand_address + 1;
+		raw_address_t m1_addr = operand_address + 2;
 
-		number_format_t m1_number_format = cpu->pr[IP];
-		set_data_in_halfword(increment_ip(3, cpu), &(m1_number_format.pointer_value));
-
-		raw_address_t m0_addr = get_address_from_pointer(m0_number_format, cpu);
-		raw_address_t m1_addr = get_address_from_pointer(m1_number_format, cpu);
-
-		byte_t m0_byte;
-		byte_t m1_byte;
-
-		m0_byte = get_byte_from_memory(m0_addr);
-		m1_byte = get_byte_from_memory(m1_addr);
+		byte_t m0_byte = get_byte_from_memory(m0_addr);
+		byte_t m1_byte = get_byte_from_memory(m1_addr);
 		if (operand.indirect)
 		{
 			uint8_t m0_data, m1_data;
@@ -1010,13 +1001,12 @@ void instruction_fetch_loop(cpu_t *cpu)
 {
 	for (;;)
 	{
-		uint16_t new_pointer_addr = 0;
 		raw_address_t instruction  = get_address_from_pointer(cpu->pr[IP], cpu);
 		byte_t opcode              = get_byte_from_memory(instruction);
 
 		operand_table_t decoded_opcode = opcodes[decode_byte_t(opcode)];
 
-		number_format_t arg_number_format = cpu->pr[IP];
+		raw_address_t cur_ip_addr = instruction;
 
 		byte_t bitmask;
 
@@ -1033,12 +1023,9 @@ void instruction_fetch_loop(cpu_t *cpu)
 				num_operands = 2;
 				break;
 			case BIT_OPS:
+				cur_ip_addr += BYTE_SIZE;
 				{
-					set_data_in_halfword(increment_ip(BYTE_SIZE, cpu), &(arg_number_format.pointer_value));
-					raw_address_t new_ip = get_address_from_pointer(arg_number_format, cpu);
-					bitmask = get_byte_from_memory(new_ip);
-
-					set_data_in_halfword(new_ip, &(arg_number_format.pointer_value));
+					bitmask = get_byte_from_memory(cur_ip_addr);
 				}
 
 				num_operands = 1;
@@ -1055,14 +1042,17 @@ void instruction_fetch_loop(cpu_t *cpu)
 			exit(EXIT_FAILURE);
 		}
 
+		cur_ip_addr += BYTE_SIZE;
 		for (size_t i = 0; i < num_operands; i++)
 		{
-			set_data_in_halfword(increment_ip(BYTE_SIZE, cpu), &(arg_number_format.pointer_value));
-			raw_address_t arg_addr = get_address_from_pointer(arg_number_format, cpu);
-			operands[i] = decode_operand(arg_addr, cpu);
-		}
+			operands[i] = decode_operand(cur_ip_addr, cpu);
 
-		uint16_t ip_offset = 0;
+			cur_ip_addr += BYTE_SIZE;
+			if (operands[i].is_long)
+			{
+				cur_ip_addr += HALFWORD_SIZE;
+			}
+		}
 
 		for (size_t i = 0; i < num_operands; i++)
 		{
@@ -1079,15 +1069,6 @@ void instruction_fetch_loop(cpu_t *cpu)
 		for (size_t i = 0; i < num_operands; i++)
 		{
 			operand_return_t operand_ret = canonicalize_operand(operands[i], cpu);
-
-			if (operands[i].is_long)
-			{
-				ip_offset += 3;
-			}
-			else
-			{
-				ip_offset += 1;
-			}
 
 			cond_result_or |= result.hit_conditional;
 
@@ -1137,7 +1118,7 @@ void instruction_fetch_loop(cpu_t *cpu)
 			handle_postslash(operands[i], cpu);
 		}
 
-		new_pointer_addr = increment_ip(BYTE_SIZE * (num_operands + 1) + ip_offset, cpu);
+		uint16_t new_pointer_addr = increment_ip(cur_ip_addr - instruction, cpu);
 		if (result.conditional_subtract_result == false)
 		{
 			assert(!result.changed_IP && !did_branch);
