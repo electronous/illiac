@@ -13,6 +13,9 @@ operand_table_t opcodes[NUM_OPCODES] = {
 	[ASSIGN_HALFWORD | FLAGGED]  = { .num_operands = TWO_OPS, .opcode_impl.two_args = assign_halfword },
 	[ASSIGN_WORD     | FLAGGED]  = { .num_operands = TWO_OPS, .opcode_impl.two_args = assign_word },
 
+	[NOP     | FLAGGED] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = nop },
+	[SPECIFY | FLAGGED] = { .num_operands = MANY_OPS, .opcode_impl.zero_args = nop },
+
 	[IF            | FLAGGED]  = { .num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch },
 	[IF_NOT        | FLAGGED]  = { .num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch_not },
 
@@ -538,6 +541,10 @@ void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
 		word_t source_data = get_word_from_memory(source_addr);
 		put_word_into_memory(source_data, dest_addr);
 	}
+}
+
+void nop(cpu_t *cpu)
+{
 }
 
 bool branch(byte_t byte, cpu_t *cpu)
@@ -1142,6 +1149,23 @@ void instruction_fetch_loop(cpu_t *cpu)
 				}
 
 				num_operands = 1;
+				break;
+			case MANY_OPS:
+				for (raw_address_t temp_ip_addr = cur_ip_addr + BYTE_SIZE; ;)
+				{
+					operand_t operand = decode_operand(temp_ip_addr, cpu);
+					num_operands++;
+
+					temp_ip_addr += BYTE_SIZE;
+					if (operand.is_long)
+					{
+						temp_ip_addr += HALFWORD_SIZE;
+					}
+					if (!operand.last)
+					{
+						break;
+					}
+				}
 				break;
 			default:
 				hcf(opcode, cpu);

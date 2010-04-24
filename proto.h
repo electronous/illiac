@@ -141,6 +141,8 @@ typedef enum
 	ASSIGN_HALFWORD,
 	ASSIGN_WORD,
 	ASSIGN_DOUBLEWORD,
+	NOP         = b(00010100),
+	SPECIFY,
 	IF          = b(00110100),
 	IF_NOT,
 	ABS_SHORT   = b(10010100),
@@ -350,6 +352,8 @@ void assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
 void assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
 
 void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+
+void nop(cpu_t *);
 
 bool branch(byte_t byte, cpu_t *cpu);
 
