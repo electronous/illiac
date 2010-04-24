@@ -1084,7 +1084,18 @@ operand_return_t canonicalize_operand(operand_t operand, cpu_t *cpu)
 				operand_return.hit_conditional = true;
 				if ((new_data >> 15) == 0 && new_data > 0)
 				{
-					set_data_in_halfword(new_data, &(cpu->pr[pointer_register_index].pointer_value));
+					if (pointer_register_index != IP)
+					{
+						set_data_in_halfword(new_data, &(cpu->pr[pointer_register_index].pointer_value));
+					}
+					else
+					{
+						new_halfword = cpu->pr[pointer_register_index].pointer_value;
+						set_data_in_halfword(new_data, &new_halfword);
+
+						operand_return.changed_IP = true;
+						operand_return.new_IP = new_halfword;
+					}
 					operand_return.conditional_subtract_result = false;
 				}
 				else
