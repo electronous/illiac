@@ -9,25 +9,29 @@ byte_t *core_memory;
 
 const
 operand_table_t opcodes[NUM_OPCODES] = {
-	[IF            | FLAGED]   = {.num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch},
-	[IF_NOT        | FLAGED]   = {.num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch_not},
+	[ASSIGN_BYTE     | FLAGGED]  = { .num_operands = TWO_OPS, .opcode_impl.two_args = assign_byte },
+	[ASSIGN_HALFWORD | FLAGGED]  = { .num_operands = TWO_OPS, .opcode_impl.two_args = assign_halfword },
+	[ASSIGN_WORD     | FLAGGED]  = { .num_operands = TWO_OPS, .opcode_impl.two_args = assign_word },
 
-	[ABS_SHORT     | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_short},
-	[ABS_LONG      | FLAGED]   = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_long},
+	[IF            | FLAGGED]  = { .num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch },
+	[IF_NOT        | FLAGGED]  = { .num_operands = BIT_OPS,  .opcode_impl.bit_args  = branch_not },
 
-	[ONE_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = one_byte},
+	[ABS_SHORT     | FLAGGED]  = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_short },
+	[ABS_LONG      | FLAGGED]  = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = abs_long },
 
-	[SLUFF_BYTE    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_byte},
-	[SLUFF_HALFWORD| FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_halfword},
-	[SLUFF_WORD    | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_word},
+	[ONE_BYTE      | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = one_byte },
 
-	[DUP_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_byte},
-	[DUP_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_halfword},
-	[DUP_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_word},
+	[SLUFF_BYTE    | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_byte },
+	[SLUFF_HALFWORD| FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_halfword },
+	[SLUFF_WORD    | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = sluff_word },
 
-	[XCH_BYTE      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_byte},
-	[XCH_HALFWORD  | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_halfword},
-	[XCH_WORD      | FLAGLESS] = {.num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_word}
+	[DUP_BYTE      | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_byte },
+	[DUP_HALFWORD  | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_halfword },
+	[DUP_WORD      | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = dup_word },
+
+	[XCH_BYTE      | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_byte },
+	[XCH_HALFWORD  | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_halfword },
+	[XCH_WORD      | FLAGLESS] = { .num_operands = ZERO_OPS, .opcode_impl.zero_args = xch_word }
 };
 
 raw_address_t get_address_common(number_format_t p, const cpu_t *cpu)
@@ -423,6 +427,117 @@ void push_operand_word(word_t arg, cpu_t *cpu)
 {
 	push_operand_halfword(arg.high, cpu);
 	push_operand_halfword(arg.low,  cpu);
+}
+
+void assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
+{
+	if (operand_reg_1.last || operand_reg_2.last)
+	{
+		uint16_t source_data;
+		if (operand_reg_2.last)
+		{
+			source_data = get_data_from_halfword(cpu->pr[operand_reg_2.pointer_register_index].pointer_value);
+		}
+		else
+		{
+			raw_address_t source_addr = get_address_from_pointer(cpu->pr[operand_reg_2.pointer_register_index], cpu);
+			source_data = get_data_from_halfword(get_halfword_from_memory(source_addr));
+		}
+
+		if (operand_reg_1.last)
+		{
+			set_data_in_halfword(source_data, &(cpu->pr[operand_reg_1.pointer_register_index].pointer_value));
+		}
+		else
+		{
+			raw_address_t dest_addr = get_address_from_pointer(cpu->pr[operand_reg_1.pointer_register_index], cpu);
+			halfword_t temp = get_halfword_from_memory(dest_addr);
+			set_data_in_halfword(source_data, &temp);
+			put_halfword_into_memory(temp, dest_addr);
+		}
+	}
+	else
+	{
+		raw_address_t source_addr = get_address_from_pointer(cpu->pr[operand_reg_2.pointer_register_index], cpu);
+		raw_address_t dest_addr = get_address_from_pointer(cpu->pr[operand_reg_1.pointer_register_index], cpu);
+
+		byte_t source_data = get_byte_from_memory(source_addr);
+		put_byte_into_memory(source_data, dest_addr);
+	}
+}
+
+void assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
+{
+	if (operand_reg_1.last || operand_reg_2.last)
+	{
+		uint16_t source_data;
+		if (operand_reg_2.last)
+		{
+			source_data = get_data_from_halfword(cpu->pr[operand_reg_2.pointer_register_index].pointer_link);
+		}
+		else
+		{
+			raw_address_t source_addr = get_address_from_pointer(cpu->pr[operand_reg_2.pointer_register_index], cpu);
+			source_data = get_data_from_halfword(get_halfword_from_memory(source_addr));
+		}
+
+		if (operand_reg_1.last)
+		{
+			set_data_in_halfword(source_data, &(cpu->pr[operand_reg_1.pointer_register_index].pointer_link));
+		}
+		else
+		{
+			raw_address_t dest_addr = get_address_from_pointer(cpu->pr[operand_reg_1.pointer_register_index], cpu);
+			halfword_t temp = get_halfword_from_memory(dest_addr);
+			set_data_in_halfword(source_data, &temp);
+			put_halfword_into_memory(temp, dest_addr);
+		}
+	}
+	else
+	{
+		raw_address_t source_addr = get_address_from_pointer(cpu->pr[operand_reg_2.pointer_register_index], cpu);
+		raw_address_t dest_addr = get_address_from_pointer(cpu->pr[operand_reg_1.pointer_register_index], cpu);
+
+		halfword_t source_data = get_halfword_from_memory(source_addr);
+		put_halfword_into_memory(source_data, dest_addr);
+	}
+}
+
+void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *cpu)
+{
+	if (operand_reg_1.last || operand_reg_2.last)
+	{
+		word_t source_data;
+		if (operand_reg_2.last)
+		{
+			source_data.high = cpu->pr[operand_reg_2.pointer_register_index].pointer_link;
+			source_data.low  = cpu->pr[operand_reg_2.pointer_register_index].pointer_value;
+		}
+		else
+		{
+			raw_address_t source_addr = get_address_from_pointer(cpu->pr[operand_reg_2.pointer_register_index], cpu);
+			source_data = get_word_from_memory(source_addr);
+		}
+
+		if (operand_reg_1.last)
+		{
+			cpu->pr[operand_reg_1.pointer_register_index].pointer_link  = source_data.high;
+			cpu->pr[operand_reg_1.pointer_register_index].pointer_value = source_data.low;
+		}
+		else
+		{
+			raw_address_t dest_addr = get_address_from_pointer(cpu->pr[operand_reg_1.pointer_register_index], cpu);
+			put_word_into_memory(source_data, dest_addr);
+		}
+	}
+	else
+	{
+		raw_address_t source_addr = get_address_from_pointer(cpu->pr[operand_reg_2.pointer_register_index], cpu);
+		raw_address_t dest_addr = get_address_from_pointer(cpu->pr[operand_reg_1.pointer_register_index], cpu);
+
+		word_t source_data = get_word_from_memory(source_addr);
+		put_word_into_memory(source_data, dest_addr);
+	}
 }
 
 bool branch(byte_t byte, cpu_t *cpu)

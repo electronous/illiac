@@ -131,17 +131,21 @@ typedef struct
 
 typedef enum
 {
-	FLAGLESS = 0u << 8u,
-	FLAGED   = 1u << 8u
+	FLAGLESS  = 0u << 8u,
+	FLAGGED   = 1u << 8u
 } operand_flag_t;
 
 typedef enum
 {
-	IF         = b(00110100),
+	ASSIGN_BYTE = b(00000000),
+	ASSIGN_HALFWORD,
+	ASSIGN_WORD,
+	ASSIGN_DOUBLEWORD,
+	IF          = b(00110100),
 	IF_NOT,
-	ABS_SHORT  = b(10010100),
+	ABS_SHORT   = b(10010100),
 	ABS_LONG
-} flaged_opcode_t;
+} flagged_opcode_t;
 
 #define NUM_OPCODES (1u << 9u)
 
@@ -340,6 +344,12 @@ void push_operand_byte(byte_t arg, cpu_t *cpu);
 void push_operand_halfword(halfword_t arg, cpu_t *cpu);
 
 void push_operand_word(word_t arg, cpu_t *cpu);
+
+void assign_byte(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+
+void assign_halfword(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
+
+void assign_word(operand_t operand_reg_1, operand_t operand_reg_2, cpu_t *);
 
 bool branch(byte_t byte, cpu_t *cpu);
 
